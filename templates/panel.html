@@ -5,6 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inicio - Herramientas</title>
   <style>
+    .logos-inicio {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 30px;
+}
+
+.logos-inicio img {
+  height: 65px;
+  max-width: 180px;
+  object-fit: contain;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 12px;
+}
     body {
       background: #0a0f1e;
       color: white;
@@ -47,6 +63,14 @@
   </style>
 </head>
 <body>
+
+  <div class="logos-inicio">
+    <img src="{{ url_for('static', filename='logo_eshen.jpg') }}" alt="Logo ESHEN">
+    <img src="{{ url_for('static', filename='logo_maf.png') }}" alt="Logo MAF">
+  </div>
+
+  <h1>Panel de Herramientas</h1>
+  <p>Selecciona la herramienta que deseas utilizar.</p>
 
   <h1>Panel de Herramientas</h1>
   <p>Selecciona la herramienta que deseas utilizar.</p>
