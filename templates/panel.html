@@ -1,98 +1,73 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inicio - Herramientas</title>
-  <style>
-    .logos-inicio {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 22px;
-  margin-bottom: 30px;
-}
-
-.logos-inicio img {
-  height: 65px;
-  max-width: 180px;
-  object-fit: contain;
-  background: white;
-  padding: 8px 12px;
-  border-radius: 12px;
-}
-    body {
-      background: #0a0f1e;
-      color: white;
-      font-family: Arial, sans-serif;
-      padding: 60px;
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    p {
-      color: #b7c0d8;
-      margin-bottom: 30px;
-    }
-
-    .cards {
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .card {
-      background: #111827;
-      border: 1px solid #23304a;
-      border-radius: 16px;
-      padding: 30px;
-      width: 220px;
-      text-decoration: none;
-      color: white;
-      transition: 0.2s;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      border-color: #38bdf8;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Panel de Herramientas Industriales</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-  <div class="logos-inicio">
-    <img src="{{ url_for('static', filename='logo_eshen.jpg') }}" alt="Logo ESHEN">
-    <img src="{{ url_for('static', filename='logo_maf.png') }}" alt="Logo MAF">
-  </div>
+<nav class="navbar">
+    <div class="nav-logos">
+        <img src="{{ url_for('static', filename='logo_eshen.png') }}" alt="ESHEN">
+        <img src="{{ url_for('static', filename='logo_maf.png') }}" alt="MAF">
+    </div>
 
-  <h1>Panel de Herramientas</h1>
-  <p>Selecciona la herramienta que deseas utilizar.</p>
+    <div class="nav-links">
+        <a href="/">Inicio</a>
+        <a href="/laser">⚡ Calculadora</a>
+        <a href="/cotizador">📄 Cotizador</a>
+        <a href="/remision">📋 Remisión</a>
+        <a href="/ordenes">🔧 Ordenes</a>
+    </div>
+</nav>
 
-  <div class="cards">
-    <a class="card" href="/laser">
-      <h2>Calculadora Láser</h2>
-      <p>Cálculo de corte, material y tiempos.</p>
+<section class="hero">
+    <div class="hero-logos">
+        <img src="{{ url_for('static', filename='logo_eshen.png') }}" alt="ESHEN">
+        <span>×</span>
+        <img src="{{ url_for('static', filename='logo_maf.png') }}" alt="MAF">
+    </div>
+
+    <h1>Panel de<br>Herramientas<br>Industriales</h1>
+    <p>Tus herramientas en un solo lugar.<br>Selecciona una para comenzar.</p>
+</section>
+
+<section class="cards-container">
+
+    <a href="/laser" class="tool-card">
+        <div class="card-icon">⚡</div>
+        <h2>Calculadora de Corte Laser</h2>
+        <p>Calcula costos, agrega ganancia y envía la partida directo al cotizador con un clic.</p>
+        <span class="tag tag-blue">MAF AUTOMATION</span>
+        <span class="arrow">→</span>
     </a>
 
-    <a class="card" href="/cotizador">
-      <h2>Cotizador</h2>
-      <p>Generación de cotizaciones.</p>
+    <a href="/cotizador" class="tool-card">
+        <div class="card-icon">📄</div>
+        <h2>Generador de Cotizaciones</h2>
+        <p>Llena los datos del cliente, agrega partidas y descarga el PDF con tu formato ESHEN.</p>
+        <span class="tag tag-yellow">ESHEN</span>
+        <span class="arrow">→</span>
     </a>
 
-    <a class="card" href="/remision">
-      <h2>Remisión</h2>
-      <p>Generación de remisiones.</p>
+    <a href="/remision" class="tool-card">
+        <div class="card-icon">📋</div>
+        <h2>Generador de Remisiones</h2>
+        <p>Genera remisiones en una hoja para recortar, con imagen de evidencia al reverso.</p>
+        <span class="tag tag-green">ESHEN</span>
+        <span class="arrow">→</span>
     </a>
 
-    <a class="card" href="/ordenes">
-      <h2>Órdenes</h2>
-      <p>Control de órdenes de trabajo.</p>
+    <a href="/ordenes" class="tool-card">
+        <div class="card-icon">🔧</div>
+        <h2>Ordenes de Trabajo</h2>
+        <p>Asigna tareas a tu equipo. Los trabajadores actualizan el estado desde su celular.</p>
+        <span class="tag tag-purple">ESHEN</span>
+        <span class="arrow">→</span>
     </a>
-  </div>
+
+</section>
 
 </body>
 </html>
