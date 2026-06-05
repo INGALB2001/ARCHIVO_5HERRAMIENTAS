@@ -251,14 +251,16 @@ async function init() {
     });
   });
 
-  const saved = localStorage.getItem('ot_worker');
-  if (saved) { sel.value = saved; onWorkerChange(); }
+const adminUser = prompt("Usuario administrador:");
+const adminPass = prompt("Contraseña:");
 
-  const adminSaved = sessionStorage.getItem('ot_admin');
-  if (adminSaved === '1') {
-    isAdmin = true;
-    showAdminMode();
-    loadOrdenes();
+if (adminUser === "alberto" && adminPass === "8080") {
+  sessionStorage.setItem("ot_admin", "1");
+  sessionStorage.setItem("ot_admin_user", "alberto");
+  isAdmin = true;
+  showAdminMode();
+} else {
+  alert("Usuario o contraseña incorrectos");
   }
 }
 
