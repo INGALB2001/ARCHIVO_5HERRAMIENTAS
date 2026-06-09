@@ -4,102 +4,146 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Ordenes de Trabajo - ESHEN</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--azul:#0d1b3e;--dorado:#c9a227;--purp:#7c3aed;--bg:#f0f4ff;--surface:#fff;--border:#dde4f5;--text:#0d1b3e;--muted:#6b7a99;--pend:#f59e0b;--proc:#3b82f6;--comp:#22c55e;--radius:12px}
-body{background:var(--bg);font-family:'Segoe UI',sans-serif;font-size:15px;color:var(--text);min-height:100vh}
-nav{position:fixed;top:0;left:0;right:0;height:58px;background:rgba(10,15,30,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;z-index:9999}
+:root{--azul:#0d1b3e;--dorado:#c9a227;--purp:#7c3aed;--bg:#f0f4ff;--surface:#fff;
+  --border:#dde4f5;--text:#0d1b3e;--muted:#6b7a99;
+  --pend:#f59e0b;--proc:#3b82f6;--comp:#22c55e;--radius:12px}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text)}
+
+nav{position:fixed;top:0;left:0;right:0;height:58px;background:rgba(10,15,30,.97);
+  backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;z-index:9999}
 .nav-logos{display:flex;align-items:center;gap:10px}
 .nav-logos img{height:34px;object-fit:contain}
 .nav-logos .sep{width:1px;height:24px;background:rgba(255,255,255,.07)}
 .nav-tools{display:flex;gap:5px;flex-wrap:wrap}
-.nav-btn{background:none;border:1px solid rgba(255,255,255,.1);color:#8892a4;padding:6px 13px;border-radius:20px;cursor:pointer;font-size:12px;font-family:'Segoe UI',sans-serif;transition:all .18s;text-decoration:none;display:inline-block}
+.nav-btn{background:none;border:1px solid rgba(255,255,255,.1);color:#8892a4;padding:6px 13px;
+  border-radius:20px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;
+  transition:all .18s;text-decoration:none;display:inline-block}
 .nav-btn:hover{border-color:rgba(255,255,255,.25);color:#f0ece4}
 .nav-btn.active{background:#1a2235;border-color:rgba(255,255,255,.2);color:#f0ece4;font-weight:500}
 
-.container{max-width:700px;margin:0 auto;padding:74px 16px 40px}
-.page-title{font-size:20px;font-weight:700;color:var(--azul);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.container{max-width:800px;margin:0 auto;padding:74px 16px 40px}
+
+.page-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--azul);
+  margin-bottom:4px;display:flex;align-items:center;gap:8px}
 .page-title::before{content:'';width:4px;height:20px;background:var(--purp);border-radius:2px}
 .page-sub{font-size:13px;color:var(--muted);margin-bottom:16px;padding-left:12px}
 
-/* Worker selector */
-.worker-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px}
-.worker-card label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px}
-.worker-card select{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:16px;background:#fff;color:var(--text);outline:none}
-.worker-card select:focus{border-color:var(--azul)}
+/* Tabs */
+.tabs{display:flex;gap:4px;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:10px;padding:4px;margin-bottom:18px}
+.tab{flex:1;padding:9px;background:none;border:none;border-radius:7px;font-size:13px;
+  font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s;font-family:'DM Sans',sans-serif}
+.tab.active{background:var(--purp);color:#fff}
 
-/* Stats */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-.stat{background:var(--surface);border-radius:10px;padding:12px;text-align:center;border:1.5px solid var(--border)}
-.stat-n{font-size:22px;font-weight:700}
-.stat-l{font-size:11px;color:var(--muted);margin-top:2px}
-.stat.pend .stat-n{color:var(--pend)}
-.stat.proc .stat-n{color:var(--proc)}
-.stat.comp .stat-n{color:var(--comp)}
+/* Cards */
+.card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-bottom:12px}
+.card-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
 
-.btn-new{width:100%;padding:13px;background:var(--purp);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn-new:active{opacity:.85}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--border);
+  border-radius:8px;padding:9px 11px;font-size:14px;color:var(--text);background:#fff;
+  outline:none;font-family:'DM Sans',sans-serif;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--purp)}
+.field textarea{resize:vertical;min-height:70px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:580px){.grid2,.grid3{grid-template-columns:1fr}}
 
-/* Cards ordenes */
-.orden-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
-.orden-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer}
-.folio{font-weight:700;font-size:16px;color:var(--azul)}
-.badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase}
+/* Refacciones */
+.ref-wrap{overflow-x:auto}
+.ref-tbl{width:100%;border-collapse:collapse;min-width:500px;font-size:13px;margin-bottom:8px}
+.ref-tbl th{background:var(--azul);color:#fff;padding:7px 6px;text-align:left;font-size:11px;font-weight:600}
+.ref-tbl td{padding:5px 4px;border-bottom:1px solid var(--border)}
+.ref-tbl input,.ref-tbl select{width:100%;border:1px solid var(--border);border-radius:5px;
+  padding:5px;font-size:12px;background:#fff;font-family:'DM Sans',sans-serif}
+.btn-ref{background:none;border:1.5px dashed var(--purp);color:var(--purp);border-radius:8px;
+  padding:7px;width:100%;cursor:pointer;font-size:13px;font-weight:600;margin-bottom:10px;
+  font-family:'DM Sans',sans-serif}
+
+/* Botones accion */
+.btn-row{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap}
+.btn-save{flex:1;min-width:140px;padding:12px;background:var(--purp);color:#fff;border:none;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;font-family:'DM Sans',sans-serif}
+.btn-save:active{opacity:.85}
+.btn-pdf{flex:1;min-width:140px;padding:12px;background:var(--azul);color:#fff;border:none;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;font-family:'DM Sans',sans-serif}
+.btn-pdf:active{opacity:.85}
+.btn-cancel{padding:12px 20px;background:none;color:var(--muted);border:1.5px solid var(--border);
+  border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* Lista ordenes */
+.orden-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:14px;margin-bottom:10px;transition:border-color .15s}
+.orden-card:hover{border-color:rgba(124,58,237,.3)}
+.orden-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.folio{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--azul)}
+.badge{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase}
 .badge.pendiente{background:#fef3c7;color:#92400e}
 .badge.en_proceso{background:#dbeafe;color:#1e40af}
 .badge.completado{background:#dcfce7;color:#14532d}
-.orden-desc{font-size:13px;color:var(--muted);margin-bottom:6px;line-height:1.4;cursor:pointer}
-.orden-meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;cursor:pointer}
-.estado-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-.est-btn{padding:8px 4px;border:2px solid transparent;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#f8f9ff;color:var(--muted);text-align:center;transition:all .15s}
+.orden-info{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.5}
+.orden-meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.estado-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.est-btn{padding:8px 4px;border:2px solid transparent;border-radius:8px;font-size:12px;
+  font-weight:700;cursor:pointer;background:#f8f9ff;color:var(--muted);text-align:center;
+  transition:all .15s;font-family:'DM Sans',sans-serif}
 .est-btn.ap{border-color:var(--pend);background:#fef3c7;color:#92400e}
 .est-btn.apr{border-color:var(--proc);background:#dbeafe;color:#1e40af}
 .est-btn.ac{border-color:var(--comp);background:#dcfce7;color:#14532d}
+.orden-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn-sm{padding:6px 14px;border:1.5px solid var(--border);border-radius:7px;
+  background:none;font-size:12px;font-weight:600;cursor:pointer;color:var(--azul);
+  font-family:'DM Sans',sans-serif}
+.btn-sm:hover{background:var(--bg)}
+.btn-sm.pdf{border-color:var(--azul);color:var(--azul)}
+.btn-sm.del{border-color:#cc3333;color:#cc3333}
 
-/* Admin toggle */
-.admin-bar{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-.admin-bar span{font-size:13px;color:var(--muted)}
-.btn-admin{padding:7px 16px;background:var(--azul);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
-.admin-filters{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px;display:none}
-.admin-filters.show{display:block}
-.admin-filters label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px}
-.admin-filters select{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px;font-size:14px;background:#fff;outline:none;margin-bottom:10px}
-.admin-filters select:focus{border-color:var(--azul)}
-.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.admin-stat{background:var(--bg);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)}
-.admin-stat-n{font-size:20px;font-weight:700;color:var(--azul)}
-.admin-stat-l{font-size:10px;color:var(--muted)}
+/* Filtros admin */
+.filtros{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filtros select{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;
+  font-size:13px;background:#fff;color:var(--text);outline:none;font-family:'DM Sans',sans-serif}
+.filtros select:focus{border-color:var(--purp)}
 
-/* Modal */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;overflow-y:auto;padding:16px}
-.overlay.show{display:flex;align-items:flex-start;justify-content:center}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:580px;padding:20px;position:relative;margin:auto}
-.modal-title{font-size:17px;font-weight:700;color:var(--azul);margin-bottom:16px}
-.modal-x{position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)}
-.field{margin-bottom:11px}
-.field label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
-.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:14px;color:var(--text);background:#fff;outline:none;font-family:inherit}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--azul)}
-.field textarea{resize:vertical;min-height:65px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.ref-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px}
-.ref-tbl th{background:var(--azul);color:#fff;padding:6px 5px;text-align:left;font-size:11px}
-.ref-tbl td{padding:4px 3px;border-bottom:1px solid var(--border)}
-.ref-tbl input,.ref-tbl select{width:100%;border:1px solid var(--border);border-radius:4px;padding:4px;font-size:12px;background:#fff}
-.btn-ref{background:none;border:1.5px dashed var(--azul);color:var(--azul);border-radius:8px;padding:7px;width:100%;cursor:pointer;font-size:13px;font-weight:600;margin-bottom:10px}
-.btn-save{width:100%;padding:12px;background:var(--purp);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:2px}
-.btn-del{width:100%;padding:10px;background:none;color:#cc3333;border:1.5px solid #cc3333;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;
+  padding:12px;text-align:center}
+.stat-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+.stat-l{font-size:11px;color:var(--muted);margin-top:2px}
+.stat.tot .stat-n{color:var(--purp)}
+.stat.pen .stat-n{color:var(--pend)}
+.stat.pro .stat-n{color:var(--proc)}
+.stat.com .stat-n{color:var(--comp)}
+@media(max-width:500px){.stats{grid-template-columns:repeat(2,1fr)}}
 
-/* Login modal */
-.login-box{background:#fff;border-radius:16px;padding:28px;max-width:340px;width:100%;margin:auto;text-align:center}
-.login-box h3{font-size:18px;font-weight:700;color:var(--azul);margin-bottom:6px}
+/* Login */
+.login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;
+  display:none;align-items:center;justify-content:center;padding:20px}
+.login-overlay.show{display:flex}
+.login-box{background:#fff;border-radius:16px;padding:28px;max-width:340px;width:100%;text-align:center}
+.login-box h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--azul);margin-bottom:6px}
 .login-box p{color:var(--muted);font-size:13px;margin-bottom:16px}
-.login-box input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:18px;letter-spacing:4px;text-align:center;outline:none;margin-bottom:10px}
+.login-box input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:11px;
+  font-size:18px;letter-spacing:4px;text-align:center;outline:none;margin-bottom:10px;
+  font-family:'DM Sans',sans-serif}
 .login-box input:focus{border-color:var(--azul)}
-.btn-login{width:100%;padding:12px;background:var(--azul);color:#fff;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-login{width:100%;padding:12px;background:var(--azul);color:#fff;border:none;
+  border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
 
-.empty{text-align:center;padding:36px 20px;color:var(--muted)}
-.empty-icon{font-size:44px;margin-bottom:10px}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.spinner{display:none;width:18px;height:18px;border:3px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -121,176 +165,461 @@ nav{position:fixed;top:0;left:0;right:0;height:58px;background:rgba(10,15,30,.97
 
 <div class="container">
   <div class="page-title">Ordenes de Trabajo</div>
-  <p class="page-sub">Selecciona tu nombre para ver y gestionar tus ordenes</p>
+  <p class="page-sub">Crea, gestiona y descarga tus ordenes de trabajo</p>
 
-  <!-- Selector trabajador -->
-  <div class="worker-card">
-    <label>Soy...</label>
-    <select id="worker-sel" onchange="onWorkerChange()">
-      <option value="">-- Selecciona tu nombre --</option>
-    </select>
+  <div class="tabs">
+    <button class="tab active" id="tab-lista" onclick="showTab('lista')">&#128203; Mis Ordenes</button>
+    <button class="tab" id="tab-nueva" onclick="showTab('nueva')">&#43; Nueva Orden</button>
+    <button class="tab" id="tab-admin" onclick="showTabAdmin()">&#128274; Admin</button>
   </div>
 
-  <!-- Stats trabajador -->
-  <div class="stats" id="stats" style="display:none">
-    <div class="stat pend"><div class="stat-n" id="s-pend">0</div><div class="stat-l">Pendientes</div></div>
-    <div class="stat proc"><div class="stat-n" id="s-proc">0</div><div class="stat-l">En proceso</div></div>
-    <div class="stat comp"><div class="stat-n" id="s-comp">0</div><div class="stat-l">Completadas</div></div>
+  <!-- ── LISTA ── -->
+  <div id="view-lista">
+    <div class="card" style="padding:12px 14px">
+      <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:7px">Soy...</label>
+      <select id="worker-sel" onchange="onWorkerChange()" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:15px;background:#fff;outline:none">
+        <option value="">-- Selecciona tu nombre --</option>
+      </select>
+    </div>
+    <div id="stats-worker" style="display:none" class="stats">
+      <div class="stat tot"><div class="stat-n" id="sw-tot">0</div><div class="stat-l">Total</div></div>
+      <div class="stat pen"><div class="stat-n" id="sw-pen">0</div><div class="stat-l">Pendientes</div></div>
+      <div class="stat pro"><div class="stat-n" id="sw-pro">0</div><div class="stat-l">En proceso</div></div>
+      <div class="stat com"><div class="stat-n" id="sw-com">0</div><div class="stat-l">Completadas</div></div>
+    </div>
+    <div id="lista-ordenes"></div>
   </div>
 
-  <!-- Nueva orden -->
-  <button class="btn-new" id="btn-new" style="display:none" onclick="openModal()">
-    &#43; Nueva Orden de Trabajo
-  </button>
+  <!-- ── NUEVA / EDITAR ── -->
+  <div id="view-nueva" style="display:none">
+    <div class="card">
+      <div class="card-title" id="form-title">Nueva Orden de Trabajo</div>
+      <input type="hidden" id="edit-id">
 
-  <!-- Admin bar -->
-  <div class="admin-bar">
-    <span>&#128274; Vista administrador</span>
-    <button class="btn-admin" id="btn-admin-toggle" onclick="toggleAdmin()">Acceder</button>
-  </div>
-
-  <!-- Admin filters (hidden until logged in) -->
-  <div class="admin-filters" id="admin-filters">
-    <div class="grid2">
-      <div>
-        <label>Trabajador</label>
-        <select id="filtro-worker" onchange="loadOrdenes()">
-          <option value="">Todos</option>
-        </select>
+      <div class="grid3">
+        <div class="field"><label>Folio</label>
+          <input id="f-folio" readonly placeholder="Auto" style="background:#f5f7ff;color:var(--muted)">
+        </div>
+        <div class="field"><label>Estado</label>
+          <select id="f-estado">
+            <option value="pendiente">Pendiente</option>
+            <option value="en_proceso">En proceso</option>
+            <option value="completado">Completado</option>
+          </select>
+        </div>
+        <div class="field"><label>Fecha / Hora</label>
+          <input id="f-fecha" type="datetime-local">
+        </div>
       </div>
-      <div>
-        <label>Estado</label>
-        <select id="filtro-estado" onchange="loadOrdenes()">
-          <option value="">Todos</option>
-          <option value="pendiente">Pendiente</option>
-          <option value="en_proceso">En proceso</option>
-          <option value="completado">Completado</option>
-        </select>
+
+      <div class="grid2">
+        <div class="field"><label>Nombre Solicitante</label>
+          <input id="f-sol" placeholder="Quien solicita el trabajo">
+        </div>
+        <div class="field"><label>Personal Asignado</label>
+          <select id="f-asig"></select>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field"><label>Area</label>
+          <input id="f-area" placeholder="ej. Produccion, Mantenimiento">
+        </div>
+        <div class="field"><label>Codigo del Equipo</label>
+          <input id="f-equipo" placeholder="ej. EQ-015">
+        </div>
+      </div>
+
+      <div class="field"><label>Descripcion del Servicio</label>
+        <textarea id="f-desc" rows="3" placeholder="Describe detalladamente el trabajo a realizar..."></textarea>
+      </div>
+
+      <div class="field"><label>Trabajos Efectuados</label>
+        <textarea id="f-trab" rows="3" placeholder="Que trabajos se realizaron..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Refacciones Utilizadas</label>
+        <div class="ref-wrap">
+          <table class="ref-tbl">
+            <thead>
+              <tr>
+                <th style="width:60px">Cantidad</th>
+                <th style="width:65px">Unidad</th>
+                <th>Descripcion</th>
+                <th style="width:90px">Serie/No.Parte</th>
+                <th style="width:80px">Tipo</th>
+                <th style="width:30px"></th>
+              </tr>
+            </thead>
+            <tbody id="ref-body"></tbody>
+          </table>
+        </div>
+        <button class="btn-ref" onclick="addRef()">+ Agregar refaccion</button>
+      </div>
+
+      <div class="field"><label>Observaciones</label>
+        <textarea id="f-obs" rows="2" placeholder="Notas adicionales, recomendaciones..."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-cancel" onclick="showTab('lista')">Cancelar</button>
+        <button class="btn-save" onclick="saveOrden()">
+          &#128190; Guardar
+          <div class="spinner" id="sp-save"></div>
+        </button>
+        <button class="btn-pdf" onclick="saveAndPdf()">
+          &#128196; Guardar y PDF
+          <div class="spinner" id="sp-pdf"></div>
+        </button>
       </div>
     </div>
-    <div class="admin-stats" id="admin-stats"></div>
   </div>
 
-  <!-- Lista ordenes -->
-  <div id="lista"></div>
+  <!-- ── ADMIN ── -->
+  <div id="view-admin" style="display:none">
+    <div class="stats" id="stats-admin"></div>
+
+    <!-- Trabajadores -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">&#128100; Trabajadores</div>
+      <div id="workers-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="new-worker-name" placeholder="Nombre del trabajador"
+          style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;
+                 font-size:14px;outline:none;font-family:'DM Sans',sans-serif"
+          onkeydown="if(event.key==='Enter')addWorker()"
+          onfocus="this.style.borderColor='var(--purp)'"
+          onblur="this.style.borderColor='var(--border)'">
+        <button onclick="addWorker()"
+          style="padding:9px 18px;background:var(--purp);color:#fff;border:none;
+                 border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;
+                 font-family:'DM Sans',sans-serif">
+          + Agregar
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros ordenes -->
+    <div class="filtros">
+      <select id="fil-worker" onchange="loadAdmin()">
+        <option value="">Todos los trabajadores</option>
+      </select>
+      <select id="fil-estado" onchange="loadAdmin()">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="en_proceso">En proceso</option>
+        <option value="completado">Completado</option>
+      </select>
+    </div>
+    <div id="lista-admin"></div>
+  </div>
+
 </div>
 
-<!-- LOGIN OVERLAY -->
-<div class="overlay" id="login-overlay">
+<!-- LOGIN ADMIN -->
+<div class="login-overlay" id="login-overlay">
   <div class="login-box">
     <h3>&#128274; Acceso Admin</h3>
-    <p>Ingresa la contrasena para ver todas las ordenes</p>
-    <input type="password" id="admin-pwd" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="btn-login" onclick="doLogin()">Entrar</button>
-    <p id="login-err" style="color:#cc3333;font-size:13px;margin-top:8px;display:none">Contrasena incorrecta</p>
-    <button onclick="closeLogin()" style="margin-top:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px">Cancelar</button>
-  </div>
-</div>
-
-<!-- ORDEN MODAL -->
-<div class="overlay" id="modal">
-  <div class="modal">
-    <button class="modal-x" onclick="closeModal()">&#10005;</button>
-    <div class="modal-title" id="modal-ttl">Nueva Orden</div>
-    <input type="hidden" id="edit-id">
-
-    <div class="grid2">
-      <div class="field"><label>Folio</label><input id="f-folio" readonly placeholder="Auto" style="background:#f5f7ff;color:var(--muted)"></div>
-      <div class="field"><label>Estado</label>
-        <select id="f-estado">
-          <option value="pendiente">Pendiente</option>
-          <option value="en_proceso">En proceso</option>
-          <option value="completado">Completado</option>
-        </select>
-      </div>
-    </div>
-    <div class="field"><label>Solicitante</label><input id="f-sol" placeholder="Quien solicita"></div>
-    <div class="grid2">
-      <div class="field"><label>Personal Asignado</label><select id="f-asig"></select></div>
-      <div class="field"><label>Area</label><input id="f-area" placeholder="ej. Produccion"></div>
-    </div>
-    <div class="grid2">
-      <div class="field"><label>Fecha / Hora</label><input id="f-fecha" type="datetime-local"></div>
-      <div class="field"><label>Codigo del Equipo</label><input id="f-equipo" placeholder="EQ-001"></div>
-    </div>
-    <div class="field"><label>Descripcion del Servicio</label><textarea id="f-desc" placeholder="Que trabajo se va a realizar..."></textarea></div>
-    <div class="field"><label>Trabajos Efectuados</label><textarea id="f-trab" placeholder="Que se hizo..."></textarea></div>
-
-    <div class="field">
-      <label>Refacciones Utilizadas</label>
-      <table class="ref-tbl">
-        <thead><tr><th>Cant.</th><th>Unidad</th><th>Descripcion</th><th>Serie/No.Parte</th><th>Tipo</th><th></th></tr></thead>
-        <tbody id="ref-body"></tbody>
-      </table>
-      <button class="btn-ref" onclick="addRef()">+ Agregar refaccion</button>
-    </div>
-
-    <div class="field"><label>Observaciones</label><textarea id="f-obs"></textarea></div>
-    <button class="btn-save" onclick="saveOrden()">&#128190; Guardar Orden</button>
-    <button class="btn-del" id="btn-del" style="display:none" onclick="deleteOrden()">&#128465; Eliminar esta orden</button>
+    <p>Ingresa la contrasena de administrador</p>
+    <input type="password" id="admin-pwd" placeholder="Contrasena"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()" style="margin-bottom:8px">Entrar</button>
+    <p id="login-err" style="color:#cc3333;font-size:13px;display:none">Contrasena incorrecta</p>
+    <button onclick="closeLogin()"
+      style="margin-top:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px">
+      Cancelar
+    </button>
   </div>
 </div>
 
 <script>
-let currentWorker = null;
+let workers = [];
 let isAdmin = false;
-let allOrdenes = [];
+let currentWorker = null;
 
+// ── INIT ──────────────────────────────────────────────────────────────────
 async function init() {
   const res = await fetch('/api/ot/trabajadores');
-  const workers = await res.json();
+  workers = await res.json();
 
-  const sel = document.getElementById('worker-sel');
-  const fa  = document.getElementById('f-asig');
-  const fw  = document.getElementById('filtro-worker');
-  workers.forEach(w => {
-    [sel, fa, fw].forEach(el => {
+  ['worker-sel','f-asig','fil-worker'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    workers.forEach(w => {
       const opt = document.createElement('option');
       opt.value = w.id; opt.textContent = w.nombre;
-      el.appendChild(opt);
+      sel.appendChild(opt);
     });
   });
 
-const adminUser = prompt("Usuario administrador:");
-const adminPass = prompt("Contraseña:");
-
-if (adminUser === "alberto" && adminPass === "8080") {
-  sessionStorage.setItem("ot_admin", "1");
-  sessionStorage.setItem("ot_admin_user", "alberto");
-  isAdmin = true;
-  showAdminMode();
-} else {
-  alert("Usuario o contraseña incorrectos");
+  const saved = localStorage.getItem('ot_worker');
+  if (saved) {
+    document.getElementById('worker-sel').value = saved;
+    onWorkerChange();
+  }
+  if (sessionStorage.getItem('ot_admin') === '1') {
+    isAdmin = true;
   }
 }
 
-function onWorkerChange() {
-  const sel = document.getElementById('worker-sel');
-  currentWorker = sel.value || null;
-  if (currentWorker) {
-    localStorage.setItem('ot_worker', currentWorker);
-    document.getElementById('stats').style.display = 'grid';
-    document.getElementById('btn-new').style.display = 'flex';
-    loadOrdenes();
-  } else {
-    document.getElementById('stats').style.display = 'none';
-    document.getElementById('btn-new').style.display = 'none';
-    document.getElementById('lista').innerHTML = '';
-  }
+// ── TABS ─────────────────────────────────────────────────────────────────
+function showTab(tab) {
+  ['lista','nueva','admin'].forEach(t => {
+    const view = document.getElementById('view-' + t);
+    if (view) view.style.display = t === tab ? 'block' : 'none';
+    const btn = document.getElementById('tab-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  if (tab === 'lista') { if (currentWorker) loadMisOrdenes(); }
+  if (tab === 'nueva') { resetForm(); }
+  if (tab === 'admin') { loadAdmin(); }
 }
 
-function toggleAdmin() {
+function showTabAdmin() {
   if (isAdmin) {
-    isAdmin = false;
-    sessionStorage.removeItem('ot_admin');
-    document.getElementById('admin-filters').classList.remove('show');
-    document.getElementById('btn-admin-toggle').textContent = 'Acceder';
-    loadOrdenes();
+    showTab('admin');
   } else {
     document.getElementById('login-overlay').classList.add('show');
   }
 }
 
+// ── WORKER ───────────────────────────────────────────────────────────────
+function onWorkerChange() {
+  currentWorker = document.getElementById('worker-sel').value || null;
+  if (currentWorker) {
+    localStorage.setItem('ot_worker', currentWorker);
+    document.getElementById('stats-worker').style.display = 'grid';
+    loadMisOrdenes();
+  } else {
+    document.getElementById('stats-worker').style.display = 'none';
+    document.getElementById('lista-ordenes').innerHTML = '';
+  }
+}
+
+async function loadMisOrdenes() {
+  if (!currentWorker) return;
+  const res = await fetch('/api/ot/ordenes?asignado=' + currentWorker);
+  const ordenes = await res.json();
+  renderStats(ordenes, 'sw-tot','sw-pen','sw-pro','sw-com');
+  renderLista(ordenes, 'lista-ordenes', false);
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────
+async function loadAdmin() {
+  renderWorkersChips();
+  let url = '/api/ot/ordenes?';
+  const fw = document.getElementById('fil-worker').value;
+  const fe = document.getElementById('fil-estado').value;
+  if (fw) url += 'asignado=' + fw + '&';
+  if (fe) url += 'estado=' + fe;
+  const res = await fetch(url);
+  const ordenes = await res.json();
+  const sa = document.getElementById('stats-admin');
+  const p = ordenes.filter(o=>o.estado==='pendiente').length;
+  const pr = ordenes.filter(o=>o.estado==='en_proceso').length;
+  const c = ordenes.filter(o=>o.estado==='completado').length;
+  sa.innerHTML =
+    '<div class="stat tot"><div class="stat-n">' + ordenes.length + '</div><div class="stat-l">Total</div></div>' +
+    '<div class="stat pen"><div class="stat-n">' + p + '</div><div class="stat-l">Pendientes</div></div>' +
+    '<div class="stat pro"><div class="stat-n">' + pr + '</div><div class="stat-l">En proceso</div></div>' +
+    '<div class="stat com"><div class="stat-n">' + c + '</div><div class="stat-l">Completadas</div></div>';
+  renderLista(ordenes, 'lista-admin', true);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function renderStats(ordenes, tid, tpen, tpro, tcom) {
+  document.getElementById(tid).textContent  = ordenes.length;
+  document.getElementById(tpen).textContent = ordenes.filter(o=>o.estado==='pendiente').length;
+  document.getElementById(tpro).textContent = ordenes.filter(o=>o.estado==='en_proceso').length;
+  document.getElementById(tcom).textContent = ordenes.filter(o=>o.estado==='completado').length;
+}
+
+function renderLista(ordenes, containerId, showWorker) {
+  const el = document.getElementById(containerId);
+  if (!ordenes.length) {
+    el.innerHTML = '<div class="empty">&#128203;<br><br>No hay ordenes aqui.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  ordenes.forEach(o => {
+    const bc = o.estado==='pendiente'?'pendiente':o.estado==='en_proceso'?'en_proceso':'completado';
+    const bt = o.estado==='pendiente'?'Pendiente':o.estado==='en_proceso'?'En proceso':'Completado';
+    const div = document.createElement('div');
+    div.className = 'orden-card';
+    div.innerHTML =
+      '<div class="orden-head">' +
+        '<span class="folio">' + o.folio + '</span>' +
+        '<span class="badge ' + bc + '">' + bt + '</span>' +
+      '</div>' +
+      (showWorker && o.asignado_nombre ? '<div style="font-size:12px;color:var(--purp);font-weight:600;margin-bottom:6px">&#128100; ' + o.asignado_nombre + '</div>' : '') +
+      '<div class="orden-info">' +
+        (o.descripcion_servicio ? o.descripcion_servicio.substring(0,120) + (o.descripcion_servicio.length>120?'...':'') : '<em>Sin descripcion</em>') +
+      '</div>' +
+      '<div class="orden-meta">' +
+        (o.fecha_hora ? '<span>&#128197; ' + o.fecha_hora + '</span>' : '') +
+        (o.area ? '<span>&#127970; ' + o.area + '</span>' : '') +
+        (o.codigo_equipo ? '<span>&#9881; ' + o.codigo_equipo + '</span>' : '') +
+        (o.solicitante ? '<span>&#128100; ' + o.solicitante + '</span>' : '') +
+      '</div>' +
+      '<div class="estado-btns">' +
+        '<button class="est-btn ' + (o.estado==='pendiente'?'ap':'') + '" onclick="setEstado(' + o.id + ','pendiente',this)">&#128308; Pendiente</button>' +
+        '<button class="est-btn ' + (o.estado==='en_proceso'?'apr':'') + '" onclick="setEstado(' + o.id + ','en_proceso',this)">&#128992; En proceso</button>' +
+        '<button class="est-btn ' + (o.estado==='completado'?'ac':'') + '" onclick="setEstado(' + o.id + ','completado',this)">&#128994; Completado</button>' +
+      '</div>' +
+      '<div class="orden-actions">' +
+        '<button class="btn-sm" onclick='editOrden(' + JSON.stringify(JSON.stringify(o)) + ')'>&#9998; Editar</button>' +
+        '<button class="btn-sm pdf" onclick="downloadPdf(' + o.id + ','' + o.folio + '')">&#128196; PDF</button>' +
+        (isAdmin ? '<button class="btn-sm del" onclick="deleteOrden(' + o.id + ')">&#128465; Eliminar</button>' : '') +
+      '</div>';
+    el.appendChild(div);
+  });
+}
+
+// ── ESTADO ────────────────────────────────────────────────────────────────
+async function setEstado(id, estado, btn) {
+  await fetch('/api/ot/ordenes/' + id + '/estado', {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({estado})
+  });
+  if (currentWorker) loadMisOrdenes();
+  if (isAdmin && document.getElementById('view-admin').style.display !== 'none') loadAdmin();
+}
+
+// ── FORM ──────────────────────────────────────────────────────────────────
+function resetForm() {
+  document.getElementById('edit-id').value = '';
+  document.getElementById('f-folio').value = 'Auto';
+  document.getElementById('f-estado').value = 'pendiente';
+  document.getElementById('f-fecha').value = new Date().toISOString().slice(0,16);
+  document.getElementById('f-sol').value = '';
+  document.getElementById('f-asig').value = currentWorker || '';
+  document.getElementById('f-area').value = '';
+  document.getElementById('f-equipo').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-trab').value = '';
+  document.getElementById('f-obs').value = '';
+  document.getElementById('ref-body').innerHTML = '';
+  document.getElementById('form-title').textContent = 'Nueva Orden de Trabajo';
+  addRef(); addRef(); addRef();
+}
+
+function editOrden(oStr) {
+  const o = JSON.parse(oStr);
+  document.getElementById('edit-id').value = o.id;
+  document.getElementById('f-folio').value = o.folio;
+  document.getElementById('f-estado').value = o.estado;
+  document.getElementById('f-sol').value = o.solicitante || '';
+  document.getElementById('f-asig').value = o.asignado_id || '';
+  document.getElementById('f-area').value = o.area || '';
+  document.getElementById('f-equipo').value = o.codigo_equipo || '';
+  document.getElementById('f-desc').value = o.descripcion_servicio || '';
+  document.getElementById('f-trab').value = o.trabajos_efectuados || '';
+  document.getElementById('f-obs').value = o.observaciones || '';
+  document.getElementById('form-title').textContent = 'Editar ' + o.folio;
+  document.getElementById('ref-body').innerHTML = '';
+  (o.refacciones||[]).forEach(r => addRef(r));
+  if (!(o.refacciones||[]).length) addRef();
+  showTab('nueva');
+}
+
+function addRef(r=null) {
+  const tr = document.createElement('tr');
+  tr.innerHTML =
+    '<td><input class="rc" value="'+(r?.cantidad||'')+'" placeholder="1"></td>' +
+    '<td><input class="ru" value="'+(r?.unidad||'')+'" placeholder="pza"></td>' +
+    '<td><input class="rd" value="'+(r?.descripcion||'')+'" placeholder="Descripcion del material"></td>' +
+    '<td><input class="rs" value="'+(r?.serie_no_parte||'')+'" placeholder="Serie"></td>' +
+    '<td><select class="rt"><option value="nuevo" '+((!r||r.tipo==='nuevo')?'selected':'')+'>Nuevo</option>' +
+    '<option value="reparado" '+(r?.tipo==='reparado'?'selected':'')+'>Reparado</option></select></td>' +
+    '<td><button onclick="this.closest('tr').remove()" ' +
+    'style="background:none;border:none;cursor:pointer;color:#cc3333;font-size:16px;padding:2px 5px">&#10005;</button></td>';
+  document.getElementById('ref-body').appendChild(tr);
+}
+
+function collectData() {
+  const refs = [];
+  document.querySelectorAll('#ref-body tr').forEach(tr => {
+    const desc = tr.querySelector('.rd')?.value;
+    if (desc) refs.push({
+      cantidad: tr.querySelector('.rc')?.value||'',
+      unidad:   tr.querySelector('.ru')?.value||'',
+      descripcion: desc,
+      serie_no_parte: tr.querySelector('.rs')?.value||'',
+      tipo: tr.querySelector('.rt')?.value||'nuevo',
+    });
+  });
+  const fw = document.getElementById('f-fecha').value;
+  return {
+    solicitante: document.getElementById('f-sol').value,
+    asignado_id: document.getElementById('f-asig').value || currentWorker,
+    area:         document.getElementById('f-area').value,
+    fecha_hora:   fw ? fw.replace('T',' ') : '',
+    codigo_equipo:document.getElementById('f-equipo').value,
+    descripcion_servicio: document.getElementById('f-desc').value,
+    trabajos_efectuados:  document.getElementById('f-trab').value,
+    observaciones: document.getElementById('f-obs').value,
+    estado:        document.getElementById('f-estado').value,
+    refacciones: refs,
+  };
+}
+
+async function saveOrden() {
+  const btn = document.getElementById('sp-save');
+  btn.style.display = 'block';
+  const id   = document.getElementById('edit-id').value;
+  const data = collectData();
+  const res  = await fetch(id ? '/api/ot/ordenes/'+id : '/api/ot/ordenes', {
+    method: id ? 'PUT' : 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  btn.style.display = 'none';
+  showTab('lista');
+}
+
+async function saveAndPdf() {
+  const sp = document.getElementById('sp-pdf');
+  sp.style.display = 'block';
+  const id   = document.getElementById('edit-id').value;
+  const data = collectData();
+  let oid = id;
+  if (!id) {
+    const res  = await fetch('/api/ot/ordenes', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    oid = json.id;
+    data.folio = json.folio;
+  } else {
+    await fetch('/api/ot/ordenes/'+id, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    data.folio = document.getElementById('f-folio').value;
+  }
+  sp.style.display = 'none';
+  await downloadPdf(oid, data.folio);
+  showTab('lista');
+}
+
+async function downloadPdf(id, folio) {
+  const res = await fetch('/api/ot/ordenes/' + id + '/pdf');
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'OT_' + (folio||id) + '.pdf';
+  a.click();
+}
+
+async function deleteOrden(id) {
+  if (!confirm('Eliminar esta orden permanentemente?')) return;
+  await fetch('/api/ot/ordenes/'+id, {method:'DELETE'});
+  loadAdmin();
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────
 async function doLogin() {
   const pwd = document.getElementById('admin-pwd').value;
   const res = await fetch('/api/ot/admin/login', {
@@ -304,16 +633,11 @@ async function doLogin() {
     document.getElementById('login-overlay').classList.remove('show');
     document.getElementById('admin-pwd').value = '';
     document.getElementById('login-err').style.display = 'none';
-    showAdminMode();
-    loadOrdenes();
+    showTab('admin');
+    loadAdmin();
   } else {
     document.getElementById('login-err').style.display = 'block';
   }
-}
-
-function showAdminMode() {
-  document.getElementById('admin-filters').classList.add('show');
-  document.getElementById('btn-admin-toggle').textContent = 'Salir';
 }
 
 function closeLogin() {
@@ -322,173 +646,57 @@ function closeLogin() {
   document.getElementById('login-err').style.display = 'none';
 }
 
-async function loadOrdenes() {
-  let url = '/api/ot/ordenes?';
-  if (isAdmin) {
-    const fw = document.getElementById('filtro-worker').value;
-    const fe = document.getElementById('filtro-estado').value;
-    if (fw) url += 'asignado=' + fw + '&';
-    if (fe) url += 'estado=' + fe;
-  } else if (currentWorker) {
-    url += 'asignado=' + currentWorker;
-  } else return;
-
-  const res = await fetch(url);
-  allOrdenes = await res.json();
-  renderOrdenes();
-  updateStats();
-}
-
-function updateStats() {
-  const pend = allOrdenes.filter(o=>o.estado==='pendiente').length;
-  const proc = allOrdenes.filter(o=>o.estado==='en_proceso').length;
-  const comp = allOrdenes.filter(o=>o.estado==='completado').length;
-  document.getElementById('s-pend').textContent = pend;
-  document.getElementById('s-proc').textContent = proc;
-  document.getElementById('s-comp').textContent = comp;
-  if (isAdmin) {
-    document.getElementById('admin-stats').innerHTML =
-      '<div class="admin-stat"><div class="admin-stat-n">' + allOrdenes.length + '</div><div class="admin-stat-l">Total</div></div>' +
-      '<div class="admin-stat"><div class="admin-stat-n" style="color:var(--pend)">' + pend + '</div><div class="admin-stat-l">Pendientes</div></div>' +
-      '<div class="admin-stat"><div class="admin-stat-n" style="color:var(--proc)">' + proc + '</div><div class="admin-stat-l">En proceso</div></div>' +
-      '<div class="admin-stat"><div class="admin-stat-n" style="color:var(--comp)">' + comp + '</div><div class="admin-stat-l">Completadas</div></div>';
-  }
-}
-
-function renderOrdenes() {
-  const lista = document.getElementById('lista');
-  if (!allOrdenes.length) {
-    lista.innerHTML = '<div class="empty"><div class="empty-icon">&#128203;</div><p>No hay ordenes por aqui.</p></div>';
-    return;
-  }
-  lista.innerHTML = '';
-  allOrdenes.forEach(o => {
-    const bc = o.estado==='pendiente'?'pendiente':o.estado==='en_proceso'?'en_proceso':'completado';
-    const bt = o.estado==='pendiente'?'Pendiente':o.estado==='en_proceso'?'En proceso':'Completado';
-    const div = document.createElement('div');
-    div.className = 'orden-card';
-    div.innerHTML =
-      '<div class="orden-head"><span class="folio">' + o.folio + '</span><span class="badge ' + bc + '">' + bt + '</span></div>' +
-      (isAdmin ? '<div style="font-size:12px;color:var(--purp);font-weight:600;margin-bottom:4px">&#128100; ' + (o.asignado_nombre||'Sin asignar') + '</div>' : '') +
-      '<div class="orden-desc">' + (o.descripcion_servicio || 'Sin descripcion') + '</div>' +
-      '<div class="orden-meta">' +
-        (o.fecha_hora ? '<span>&#128197; ' + o.fecha_hora + '</span>' : '') +
-        (o.area ? '<span>&#127970; ' + o.area + '</span>' : '') +
-        (o.codigo_equipo ? '<span>&#9881; ' + o.codigo_equipo + '</span>' : '') +
-      '</div>' +
-      '<div class="estado-btns">' +
-        '<button class="est-btn ' + (o.estado==='pendiente'?'ap':'') + '" onclick="setEstado(event,' + o.id + ','pendiente')">&#128308; Pendiente</button>' +
-        '<button class="est-btn ' + (o.estado==='en_proceso'?'apr':'') + '" onclick="setEstado(event,' + o.id + ','en_proceso')">&#128992; En proceso</button>' +
-        '<button class="est-btn ' + (o.estado==='completado'?'ac':'') + '" onclick="setEstado(event,' + o.id + ','completado')">&#128994; Completado</button>' +
-      '</div>';
-    div.querySelector('.orden-head').addEventListener('click', () => editOrden(o));
-    div.querySelector('.orden-desc').addEventListener('click', () => editOrden(o));
-    div.querySelector('.orden-meta').addEventListener('click', () => editOrden(o));
-    lista.appendChild(div);
+// ── TRABAJADORES ──────────────────────────────────────────────────────────
+async function addWorker() {
+  const inp = document.getElementById('new-worker-name');
+  const nombre = inp.value.trim();
+  if (!nombre) return;
+  await fetch('/api/ot/trabajadores', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({nombre})
   });
+  inp.value = '';
+  await reloadWorkers();
 }
 
-async function setEstado(e, id, estado) {
-  e.stopPropagation();
-  await fetch('/api/ot/ordenes/' + id + '/estado', {
-    method:'PATCH', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({estado})
-  });
-  loadOrdenes();
+async function deleteWorker(id) {
+  if (!confirm('Desactivar este trabajador?')) return;
+  await fetch('/api/ot/trabajadores/' + id, {method:'DELETE'});
+  await reloadWorkers();
 }
 
-function openModal() {
-  document.getElementById('edit-id').value = '';
-  document.getElementById('f-folio').value = 'Auto';
-  document.getElementById('f-estado').value = 'pendiente';
-  document.getElementById('f-sol').value = '';
-  document.getElementById('f-asig').value = currentWorker || '';
-  document.getElementById('f-area').value = '';
-  document.getElementById('f-fecha').value = new Date().toISOString().slice(0,16);
-  document.getElementById('f-equipo').value = '';
-  document.getElementById('f-desc').value = '';
-  document.getElementById('f-trab').value = '';
-  document.getElementById('f-obs').value = '';
-  document.getElementById('ref-body').innerHTML = '';
-  document.getElementById('modal-ttl').textContent = 'Nueva Orden';
-  document.getElementById('btn-del').style.display = 'none';
-  addRef();
-  document.getElementById('modal').classList.add('show');
-}
-
-function editOrden(o) {
-  document.getElementById('edit-id').value = o.id;
-  document.getElementById('f-folio').value = o.folio;
-  document.getElementById('f-estado').value = o.estado;
-  document.getElementById('f-sol').value = o.solicitante || '';
-  document.getElementById('f-asig').value = o.asignado_id || '';
-  document.getElementById('f-area').value = o.area || '';
-  document.getElementById('f-equipo').value = o.codigo_equipo || '';
-  document.getElementById('f-desc').value = o.descripcion_servicio || '';
-  document.getElementById('f-trab').value = o.trabajos_efectuados || '';
-  document.getElementById('f-obs').value = o.observaciones || '';
-  document.getElementById('modal-ttl').textContent = 'Editar ' + o.folio;
-  document.getElementById('btn-del').style.display = isAdmin ? 'block' : 'none';
-  document.getElementById('ref-body').innerHTML = '';
-  (o.refacciones || []).forEach(r => addRef(r));
-  if (!(o.refacciones||[]).length) addRef();
-  document.getElementById('modal').classList.add('show');
-}
-
-function closeModal() { document.getElementById('modal').classList.remove('show'); }
-
-function addRef(r=null) {
-  const tr = document.createElement('tr');
-  tr.innerHTML =
-    '<td><input class="r-c" value="'+(r?.cantidad||'')+'" placeholder="1"></td>' +
-    '<td><input class="r-u" value="'+(r?.unidad||'')+'" placeholder="pza"></td>' +
-    '<td><input class="r-d" value="'+(r?.descripcion||'')+'" placeholder="Descripcion"></td>' +
-    '<td><input class="r-s" value="'+(r?.serie_no_parte||'')+'" placeholder="Serie"></td>' +
-    '<td><select class="r-t"><option value="nuevo" '+(r?.tipo==='nuevo'||!r?.tipo?'selected':'')+'>Nuevo</option><option value="reparado" '+(r?.tipo==='reparado'?'selected':'')+'>Reparado</option></select></td>' +
-    '<td><button onclick="this.closest('tr').remove()" style="background:none;border:none;cursor:pointer;color:#cc3333;font-size:15px">&#10005;</button></td>';
-  document.getElementById('ref-body').appendChild(tr);
-}
-
-async function saveOrden() {
-  const id = document.getElementById('edit-id').value;
-  const refs = [];
-  document.querySelectorAll('#ref-body tr').forEach(tr => {
-    const desc = tr.querySelector('.r-d')?.value;
-    if (desc) refs.push({
-      cantidad: tr.querySelector('.r-c')?.value||'',
-      unidad:   tr.querySelector('.r-u')?.value||'',
-      descripcion: desc,
-      serie_no_parte: tr.querySelector('.r-s')?.value||'',
-      tipo: tr.querySelector('.r-t')?.value||'nuevo',
+async function reloadWorkers() {
+  const res = await fetch('/api/ot/trabajadores');
+  workers = await res.json();
+  renderWorkersChips();
+  // Update all worker selects
+  ['worker-sel','f-asig','fil-worker'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    // Remove all except first option
+    while (sel.options.length > 1) sel.remove(1);
+    workers.forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w.id; opt.textContent = w.nombre;
+      sel.appendChild(opt);
     });
+    sel.value = current;
   });
-  const data = {
-    solicitante: document.getElementById('f-sol').value,
-    asignado_id: document.getElementById('f-asig').value || currentWorker,
-    area:        document.getElementById('f-area').value,
-    fecha_hora:  document.getElementById('f-fecha').value.replace('T',' '),
-    codigo_equipo: document.getElementById('f-equipo').value,
-    descripcion_servicio: document.getElementById('f-desc').value,
-    trabajos_efectuados:  document.getElementById('f-trab').value,
-    observaciones: document.getElementById('f-obs').value,
-    estado:        document.getElementById('f-estado').value,
-    refacciones: refs,
-  };
-  await fetch(id ? '/api/ot/ordenes/'+id : '/api/ot/ordenes', {
-    method: id ? 'PUT' : 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(data)
-  });
-  closeModal();
-  loadOrdenes();
 }
 
-async function deleteOrden() {
-  if (!confirm('Eliminar esta orden?')) return;
-  const id = document.getElementById('edit-id').value;
-  await fetch('/api/ot/ordenes/' + id, {method:'DELETE'});
-  closeModal();
-  loadOrdenes();
+function renderWorkersChips() {
+  const el = document.getElementById('workers-chips');
+  if (!el) return;
+  el.innerHTML = '';
+  workers.forEach(w => {
+    const chip = document.createElement('div');
+    chip.style.cssText = 'background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:13px;display:flex;align-items:center;gap:8px';
+    chip.innerHTML = w.nombre +
+      '<button onclick="deleteWorker(' + w.id + ')" ' +
+      'style="background:none;border:none;cursor:pointer;color:#cc3333;font-size:14px;padding:0;line-height:1">&#10005;</button>';
+    el.appendChild(chip);
+  });
 }
 
 init();
