@@ -9,7 +9,7 @@ from generar_remision import generar_remision
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = os.environ.get('SECRET_KEY', 'eshen_secret_2024')
-ADMIN_PASS = os.environ.get('ADMIN_PASS', 'eshen2024')
+ADMIN_PASS = os.environ.get('ADMIN_PASS', '247096')
 DB = os.path.join(BASE, 'ordenes.db')
 
 #  DB 
@@ -241,6 +241,31 @@ def ot_delete_orden(oid):
     conn.execute('DELETE FROM ot_ordenes WHERE id=?', (oid,))
     conn.commit(); conn.close()
     return jsonify({'ok': True})
+
+@app.route('/api/ot/ordenes/<int:oid>/pdf', methods=['GET'])
+def ot_pdf(oid):
+    import sys
+    sys.path.insert(0, BASE)
+    from generar_ot import generar_ot_pdf
+    conn = get_db()
+    r = conn.execute(
+        'SELECT o.*,t.nombre as asignado_nombre FROM ot_ordenes o '
+        'LEFT JOIN ot_trabajadores t ON o.asignado_id=t.id WHERE o.id=?', (oid,)).fetchone()
+    if not r:
+        return jsonify({'error':'not found'}), 404
+    d = dict(r)
+    refs = conn.execute('SELECT * FROM ot_refacciones WHERE orden_id=?', (oid,)).fetchall()
+    d['refacciones'] = [dict(ref) for ref in refs]
+    conn.close()
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+        out = tmp.name
+    generar_ot_pdf(d, out)
+    with open(out,'rb') as f:
+        buf = io.BytesIO(f.read())
+    os.unlink(out)
+    buf.seek(0)
+    return send_file(buf, mimetype='application/pdf', as_attachment=True,
+                     download_name='OT_{}.pdf'.format(d.get('folio',oid)))
 
 @app.route('/api/ot/admin/login', methods=['POST'])
 def ot_admin_login():
