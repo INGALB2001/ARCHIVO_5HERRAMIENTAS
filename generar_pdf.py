@@ -1,260 +1,345 @@
-import os, sys, io, tempfile, base64, sqlite3, json
-from datetime import datetime
-from flask import Flask, send_from_directory, request, send_file, jsonify, session
+# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+import sys, os
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.pdfbase.pdfmetrics import stringWidth
+import datetime
 
-BASE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, BASE)
-from generar_pdf import generar
-from generar_remision import generar_remision
+AZUL   = colors.HexColor('#0d1b3e')
+DORADO = colors.HexColor('#c9a227')
+BLANCO = colors.white
+GRIS   = colors.HexColor('#f5f5f5')
+NEGRO  = colors.black
+W, H   = letter  # 612 x 792 pts
 
-app = Flask(__name__, static_folder='static', static_url_path='/static')
-app.secret_key = os.environ.get('SECRET_KEY', 'eshen_secret_2024')
-ADMIN_PASS = os.environ.get('ADMIN_PASS', 'eshen2024')
-DB = os.path.join(BASE, 'ordenes.db')
+LM = 15*mm
+RM = 15*mm
+TM = 10*mm
+BM = 15*mm
+TW = W - LM - RM   # usable width
 
-#  DB 
-def get_db():
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
-    return conn
+LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'logo_eshen.jpg')
+if not os.path.exists(LOGO_PATH):
+    LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logo_eshen.jpg')
 
-def init_db():
-    conn = get_db()
-    conn.executescript('''
-        CREATE TABLE IF NOT EXISTS ot_trabajadores (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL,
-            activo INTEGER DEFAULT 1
-        );
-        CREATE TABLE IF NOT EXISTS ot_ordenes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            folio TEXT UNIQUE NOT NULL,
-            solicitante TEXT,
-            asignado_id INTEGER,
-            area TEXT,
-            fecha_hora TEXT,
-            codigo_equipo TEXT,
-            descripcion_servicio TEXT,
-            trabajos_efectuados TEXT,
-            observaciones TEXT,
-            estado TEXT DEFAULT 'pendiente',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS ot_refacciones (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            orden_id INTEGER NOT NULL,
-            cantidad TEXT, unidad TEXT,
-            descripcion TEXT, serie_no_parte TEXT,
-            tipo TEXT DEFAULT 'nuevo'
-        );
-    ''')
-    cur = conn.execute('SELECT COUNT(*) FROM ot_trabajadores')
-    if cur.fetchone()[0] == 0:
-        for w in ['Alberto Lopez','Trabajador 2','Trabajador 3','Trabajador 4','Trabajador 5']:
-            conn.execute('INSERT INTO ot_trabajadores (nombre) VALUES (?)', (w,))
-    conn.commit(); conn.close()
+def ps(name, font='Helvetica', size=8, leading=10, color=NEGRO, align=TA_LEFT):
+    return ParagraphStyle(name, fontName=font, fontSize=size, leading=leading,
+                          textColor=color, alignment=align)
 
-def next_folio():
-    conn = get_db()
-    cur = conn.execute("SELECT MAX(CAST(SUBSTR(folio,3) AS INTEGER)) FROM ot_ordenes WHERE folio LIKE 'OT%'")
-    n = (cur.fetchone()[0] or 0) + 1
-    conn.close()
-    return f'OT{n:04d}'
+def S():
+    return {
+        'n'   : ps('n'),
+        'b'   : ps('b',   font='Helvetica-Bold'),
+        'wb'  : ps('wb',  font='Helvetica-Bold', color=BLANCO),
+        'wbc' : ps('wbc', font='Helvetica-Bold', color=BLANCO, align=TA_CENTER),
+        'th'  : ps('th',  font='Helvetica-Bold', size=11, leading=14, color=BLANCO, align=TA_CENTER),
+        'sh'  : ps('sh',  font='Helvetica-Bold', size=9,  leading=11, color=BLANCO, align=TA_CENTER),
+        'cn'  : ps('cn',  font='Helvetica-Bold', size=26, leading=30, color=DORADO, align=TA_CENTER),
+        'co'  : ps('co',  font='Helvetica-Bold', size=8,  leading=10, color=NEGRO,  align=TA_CENTER),
+        'gr'  : ps('gr',  font='Helvetica-Bold', size=9,  leading=12, color=DORADO, align=TA_CENTER),
+        'ch'  : ps('ch',  font='Helvetica-Bold', size=8,  leading=10, color=DORADO, align=TA_CENTER),
+        'mr'  : ps('mr',  size=8, leading=10, color=NEGRO, align=TA_RIGHT),
+        'mbr' : ps('mbr', font='Helvetica-Bold', size=8, leading=10, color=NEGRO, align=TA_RIGHT),
+        'fi'  : ps('fi',  font='Helvetica-Bold', size=8, leading=12, color=NEGRO, align=TA_CENTER),
+        'no'  : ps('no',  font='Helvetica-Bold', size=8, leading=10, color=NEGRO),
+        'c'   : ps('c',   size=8, leading=10, color=NEGRO, align=TA_CENTER),
+        'cb'  : ps('cb',  font='Helvetica-Bold', size=8, leading=10, color=NEGRO, align=TA_CENTER),
+        'wbr' : ps('wbr', font='Helvetica-Bold', size=8, leading=10, color=BLANCO, align=TA_RIGHT),
+        'dr'  : ps('dr',  font='Helvetica-Bold', size=8, leading=10, color=DORADO, align=TA_RIGHT),
+        'drl' : ps('drl', font='Helvetica-Bold', size=11, leading=13, color=DORADO, align=TA_RIGHT),
+    }
 
-init_db()
+def fm(v):
+    try: return f'$ {float(v):,.2f}'
+    except: return str(v)
 
-#  PAGES 
-@app.route('/')
-def home():
-    return send_from_directory(BASE, 'panel.html')
+def make_table(rows, col_widths, styles):
+    t = Table(rows, colWidths=col_widths)
+    t.setStyle(TableStyle(styles))
+    return t
 
-@app.route('/laser')
-def laser():
-    return send_from_directory(BASE, 'laser.html')
+def table_height(t, available_width):
+    """Estimate table height by wrapping."""
+    w, h = t.wrap(available_width, 9999)
+    return h
 
-@app.route('/cotizador')
-def cotizador_page():
-    return send_from_directory(BASE, 'cotizador.html')
+def generar(data, out_path):
+    styles = S()
+    story_elements = []  # we'll collect (element, height) to calculate fill rows
 
-@app.route('/remision')
-def remision_page():
-    return send_from_directory(BASE, 'remision.html')
+    # -- PAGE SETUP ----------------------------------------------------------
+    usable_h = H - TM - BM  # total vertical space
 
-@app.route('/ordenes')
-def ordenes_page():
-    return send_from_directory(BASE, 'ordenes.html')
-
-#  PDF ROUTES 
-@app.route('/generar', methods=['POST'])
-def gen_pdf():
-    data = request.get_json(force=True)
-    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
-        path = tmp.name
-    generar(data, path)
-    with open(path, 'rb') as f:
-        buf = io.BytesIO(f.read())
-    os.unlink(path)
-    buf.seek(0)
-    return send_file(buf, mimetype='application/pdf', as_attachment=True,
-                     download_name='COT_{}.pdf'.format(data.get('numero_cotizacion','ESHEN')))
-
-@app.route('/generar-remision', methods=['POST'])
-def gen_remision():
-    data = request.get_json(force=True)
-    sello_path = evidencia_path = None
-    temps = []
-
-    def save_b64(b64_str, mime):
-        ext = '.jpg' if 'jpeg' in mime or 'jpg' in mime else '.png'
-        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as t:
-            t.write(base64.b64decode(b64_str)); return t.name
-
-    if data.get('sello_b64'):
-        sello_path = save_b64(data['sello_b64'], data.get('sello_mime','image/jpeg'))
-        temps.append(sello_path)
-    if data.get('evidencia_b64'):
-        evidencia_path = save_b64(data['evidencia_b64'], data.get('evidencia_mime','image/jpeg'))
-        temps.append(evidencia_path)
-
-    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
-        out_path = tmp.name
-    temps.append(out_path)
+    # -- 1. HEADER -----------------------------------------------------------
+    LOGO_W = 24*mm
+    TXT_W  = TW - LOGO_W
 
     try:
-        generar_remision(data, out_path, sello_path=sello_path, evidencia_path=evidencia_path)
-        with open(out_path, 'rb') as f:
-            buf = io.BytesIO(f.read())
-        buf.seek(0)
-        return send_file(buf, mimetype='application/pdf', as_attachment=True,
-                         download_name='REM_{}.pdf'.format(data.get('numero_remision','ESHEN')))
-    finally:
-        for p in temps:
-            if p and os.path.exists(p):
-                try: os.unlink(p)
-                except: pass
+        from reportlab.platypus import Image
+        logo = Image(LOGO_PATH, width=LOGO_W-2*mm, height=LOGO_W-2*mm)
+    except:
+        logo = Paragraph('', styles['n'])
 
-#  ORDENES API 
-@app.route('/api/ot/trabajadores', methods=['GET'])
-def ot_get_trabajadores():
-    conn = get_db()
-    rows = conn.execute('SELECT * FROM ot_trabajadores WHERE activo=1 ORDER BY nombre').fetchall()
-    conn.close()
-    return jsonify([dict(r) for r in rows])
+    hdr_inner = Table(
+        [[Paragraph('COMERCIALIZADORA Y PRESTADORA DE SERVICIOS', styles['th'])],
+         [Paragraph('INDUSTRIALES ESHEN', styles['sh'])]],
+        colWidths=[TXT_W]
+    )
+    hdr_inner.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,-1),AZUL),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        ('TOPPADDING',(0,0),(-1,-1),5),
+        ('BOTTOMPADDING',(0,0),(-1,-1),5),
+    ]))
 
-@app.route('/api/ot/trabajadores', methods=['POST'])
-def ot_add_trabajador():
-    data = request.get_json()
-    conn = get_db()
-    conn.execute('INSERT INTO ot_trabajadores (nombre) VALUES (?)', (data['nombre'],))
-    conn.commit(); conn.close()
-    return jsonify({'ok': True})
+    hdr = Table([[hdr_inner, logo]], colWidths=[TXT_W, LOGO_W])
+    hdr.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,-1),AZUL),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        ('ALIGN',(1,0),(1,0),'CENTER'),
+        ('BOX',(0,0),(-1,-1),1.5,DORADO),
+        ('TOPPADDING',(0,0),(-1,-1),3),
+        ('BOTTOMPADDING',(0,0),(-1,-1),3),
+    ]))
 
-@app.route('/api/ot/trabajadores/<int:tid>', methods=['DELETE'])
-def ot_del_trabajador(tid):
-    conn = get_db()
-    conn.execute('UPDATE ot_trabajadores SET activo=0 WHERE id=?', (tid,))
-    conn.commit(); conn.close()
-    return jsonify({'ok': True})
+    # -- 2. RFC / COT ROW ----------------------------------------------------
+    COT_W  = 46*mm
+    INFO_W = TW - COT_W
+    IC     = [INFO_W*0.32, INFO_W*0.30, INFO_W*0.18, INFO_W*0.20]
 
-@app.route('/api/ot/ordenes', methods=['GET'])
-def ot_get_ordenes():
-    conn = get_db()
-    sql = '''SELECT o.*, t.nombre as asignado_nombre
-             FROM ot_ordenes o LEFT JOIN ot_trabajadores t ON o.asignado_id=t.id
-             WHERE 1=1'''
-    params = []
-    if request.args.get('asignado'):
-        sql += ' AND o.asignado_id=?'; params.append(request.args['asignado'])
-    if request.args.get('estado'):
-        sql += ' AND o.estado=?'; params.append(request.args['estado'])
-    sql += ' ORDER BY o.id DESC'
-    rows = conn.execute(sql, params).fetchall()
-    result = []
-    for r in rows:
-        d = dict(r)
-        refs = conn.execute('SELECT * FROM ot_refacciones WHERE orden_id=?', (r['id'],)).fetchall()
-        d['refacciones'] = [dict(ref) for ref in refs]
-        result.append(d)
-    conn.close()
-    return jsonify(result)
+    rfc_e  = data.get('rfc_emisor','')
+    email_e= data.get('email_emisor','')
+    prov   = data.get('proveedor','')
+    fecha  = data.get('fecha', datetime.date.today().strftime('%d/%m/%Y'))
+    num    = data.get('numero_cotizacion','---')
 
-@app.route('/api/ot/ordenes', methods=['POST'])
-def ot_create_orden():
-    data = request.get_json()
-    folio = next_folio()
-    now   = datetime.now().strftime('%d/%m/%Y %H:%M')
-    conn  = get_db()
-    cur   = conn.execute('''INSERT INTO ot_ordenes
-        (folio,solicitante,asignado_id,area,fecha_hora,codigo_equipo,
-         descripcion_servicio,trabajos_efectuados,observaciones,estado)
-        VALUES (?,?,?,?,?,?,?,?,?,?)''',
-        (folio, data.get('solicitante',''), data.get('asignado_id') or None,
-         data.get('area',''), data.get('fecha_hora', now),
-         data.get('codigo_equipo',''), data.get('descripcion_servicio',''),
-         data.get('trabajos_efectuados',''), data.get('observaciones',''),
-         data.get('estado','pendiente')))
-    oid = cur.lastrowid
-    for ref in data.get('refacciones', []):
-        if ref.get('descripcion'):
-            conn.execute('INSERT INTO ot_refacciones (orden_id,cantidad,unidad,descripcion,serie_no_parte,tipo) VALUES (?,?,?,?,?,?)',
-                (oid, ref.get('cantidad',''), ref.get('unidad',''),
-                 ref.get('descripcion',''), ref.get('serie_no_parte',''), ref.get('tipo','nuevo')))
-    conn.commit(); conn.close()
-    return jsonify({'ok': True, 'folio': folio, 'id': oid})
+    info = Table([
+        [Paragraph(f'<b>RFC:</b> {rfc_e}', styles['n']),
+         Paragraph(f'<b>Proveedor:</b> {prov}', styles['n']),
+         Paragraph('<b>Fecha:</b>', styles['n']),
+         Paragraph(fecha, styles['n'])],
+        [Paragraph(f'<b>Email:</b> {email_e}', styles['n']), '','',''],
+    ], colWidths=IC)
+    info.setStyle(TableStyle([
+        ('BOX',(0,0),(-1,-1),0.5,NEGRO),
+        ('GRID',(0,0),(-1,-1),0.3,colors.HexColor('#cccccc')),
+        ('SPAN',(1,1),(3,1)),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        ('TOPPADDING',(0,0),(-1,-1),3),('BOTTOMPADDING',(0,0),(-1,-1),3),
+        ('LEFTPADDING',(0,0),(-1,-1),3),
+    ]))
 
-@app.route('/api/ot/ordenes/<int:oid>', methods=['PUT'])
-def ot_update_orden(oid):
-    data = request.get_json()
-    now  = datetime.now().strftime('%d/%m/%Y %H:%M')
-    conn = get_db()
-    conn.execute('''UPDATE ot_ordenes SET solicitante=?,asignado_id=?,area=?,
-        codigo_equipo=?,descripcion_servicio=?,trabajos_efectuados=?,
-        observaciones=?,estado=?,updated_at=? WHERE id=?''',
-        (data.get('solicitante',''), data.get('asignado_id') or None,
-         data.get('area',''), data.get('codigo_equipo',''),
-         data.get('descripcion_servicio',''), data.get('trabajos_efectuados',''),
-         data.get('observaciones',''), data.get('estado','pendiente'), now, oid))
-    conn.execute('DELETE FROM ot_refacciones WHERE orden_id=?', (oid,))
-    for ref in data.get('refacciones', []):
-        if ref.get('descripcion'):
-            conn.execute('INSERT INTO ot_refacciones (orden_id,cantidad,unidad,descripcion,serie_no_parte,tipo) VALUES (?,?,?,?,?,?)',
-                (oid, ref.get('cantidad',''), ref.get('unidad',''),
-                 ref.get('descripcion',''), ref.get('serie_no_parte',''), ref.get('tipo','nuevo')))
-    conn.commit(); conn.close()
-    return jsonify({'ok': True})
+    cot_box = Table([
+        [Paragraph('COTIZACIN', styles['wbc'])],
+        [Paragraph(str(num), styles['cn'])],
+    ], colWidths=[COT_W])
+    cot_box.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,-1),AZUL),
+        ('BOX',(0,0),(-1,-1),1,DORADO),
+        ('ALIGN',(0,0),(-1,-1),'CENTER'),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        ('TOPPADDING',(0,0),(-1,-1),3),('BOTTOMPADDING',(0,0),(-1,-1),3),
+        ('LEFTPADDING',(0,0),(-1,-1),2),('RIGHTPADDING',(0,0),(-1,-1),2),
+    ]))
 
-@app.route('/api/ot/ordenes/<int:oid>/estado', methods=['PATCH'])
-def ot_update_estado(oid):
-    data = request.get_json()
-    now  = datetime.now().strftime('%d/%m/%Y %H:%M')
-    conn = get_db()
-    conn.execute('UPDATE ot_ordenes SET estado=?,updated_at=? WHERE id=?',
-                 (data['estado'], now, oid))
-    conn.commit(); conn.close()
-    return jsonify({'ok': True})
+    top = Table([[info, cot_box]], colWidths=[INFO_W, COT_W])
+    top.setStyle(TableStyle([
+        ('VALIGN',(0,0),(-1,-1),'TOP'),
+        ('BOX',(0,0),(-1,-1),0.5,NEGRO),
+    ]))
 
-@app.route('/api/ot/ordenes/<int:oid>', methods=['DELETE'])
-def ot_delete_orden(oid):
-    conn = get_db()
-    conn.execute('DELETE FROM ot_refacciones WHERE orden_id=?', (oid,))
-    conn.execute('DELETE FROM ot_ordenes WHERE id=?', (oid,))
-    conn.commit(); conn.close()
-    return jsonify({'ok': True})
+    # -- 3. DATOS CLIENTE ----------------------------------------------------
+    banner = Table([[Paragraph('DATOS DEL CLIENTE', styles['wbc'])]], colWidths=[TW])
+    banner.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,-1),AZUL),
+        ('ALIGN',(0,0),(-1,-1),'CENTER'),
+        ('TOPPADDING',(0,0),(-1,-1),3),('BOTTOMPADDING',(0,0),(-1,-1),3),
+    ]))
 
-@app.route('/api/ot/admin/login', methods=['POST'])
-def ot_admin_login():
-    data = request.get_json()
-    if data.get('password') == ADMIN_PASS:
-        session['ot_admin'] = True
-        return jsonify({'ok': True})
-    return jsonify({'ok': False}), 401
+    c   = data.get('cliente',{})
+    vig = data.get('vigencia','30 das')
+    cp  = data.get('condiciones_pago',['','',''])
+    if isinstance(cp,str): cp=[cp,'','']
+    while len(cp)<3: cp.append('')
 
-@app.route('/health')
-def health():
-    return {'status': 'ok'}
+    CC = [24*mm, TW-24*mm-34*mm-38*mm, 34*mm, 38*mm]
+    cli = Table([
+        [Paragraph('<b>Razon Social:</b>',styles['b']),
+         Paragraph(c.get('razon_social',''),styles['n']),
+         Paragraph('<b>Vigencia</b>',styles['b']),
+         Paragraph('<b>CONDICIONES DE PAGO</b>',styles['b'])],
+        [Paragraph('<b>RFC:</b>',styles['b']),
+         Paragraph(c.get('rfc',''),styles['n']),
+         Paragraph(vig,styles['n']),
+         Paragraph(cp[0],styles['n'])],
+        [Paragraph('<b>Direccin:</b>',styles['b']),
+         Paragraph(c.get('direccion',''),styles['n']),
+         '', Paragraph(cp[1],styles['n'])],
+        [Paragraph('<b>Correo:</b>',styles['b']),
+         Paragraph(c.get('correo',''),styles['n']),
+         '', Paragraph(cp[2],styles['n'])],
+        [Paragraph('<b>Atencin:</b>',styles['b']),
+         Paragraph(c.get('atencion',''),styles['n']),'',''],
+    ], colWidths=CC)
+    cli.setStyle(TableStyle([
+        ('BOX',(0,0),(-1,-1),0.5,NEGRO),
+        ('GRID',(0,0),(-1,-1),0.3,colors.HexColor('#cccccc')),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        ('TOPPADDING',(0,0),(-1,-1),2),('BOTTOMPADDING',(0,0),(-1,-1),2),
+        ('LEFTPADDING',(0,0),(-1,-1),3),
+        ('SPAN',(2,2),(2,4)),
+    ]))
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5050))
-    print(f'\n  Panel Industrial en http://localhost:{port}\n')
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # -- 4. PARTIDAS TABLE ---------------------------------------------------
+    CW = [13*mm, 14*mm, 17*mm,
+          TW - 13*mm - 14*mm - 17*mm - 28*mm - 28*mm,
+          28*mm, 28*mm]
+
+    hdrs = ['PARTIDA','CANTIDAD','SKU','C O N C E P T O','PRECIO\nUNITARIO','TOTAL']
+    rows = [[Paragraph(h, styles['ch']) for h in hdrs]]
+    sty  = [
+        ('BACKGROUND',(0,0),(-1,0),AZUL),
+        ('GRID',(0,0),(-1,-1),0.3,colors.HexColor('#aaaaaa')),
+        ('BOX',(0,0),(-1,-1),0.8,NEGRO),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        ('ALIGN',(0,0),(-1,-1),'CENTER'),
+        ('TOPPADDING',(0,0),(-1,-1),3),('BOTTOMPADDING',(0,0),(-1,-1),3),
+        ('LEFTPADDING',(0,0),(-1,-1),2),('RIGHTPADDING',(0,0),(-1,-1),2),
+    ]
+    ri = 1; subtotal = 0.0
+
+    for item in data.get('partidas',[]):
+        tipo = item.get('tipo','partida')
+        if tipo == 'grupo':
+            rows.append(['','','', Paragraph(item.get('titulo',''), styles['gr']),'',''])
+            sty += [
+                ('SPAN',(0,ri),(-1,ri)),
+                ('BACKGROUND',(0,ri),(-1,ri),AZUL),
+                ('TOPPADDING',(0,ri),(-1,ri),4),
+                ('BOTTOMPADDING',(0,ri),(-1,ri),4),
+            ]
+            ri += 1
+        else:
+            cant   = float(item.get('cantidad',0) or 0)
+            p_unit = float(item.get('precio_unitario',0) or 0)
+            tot    = cant * p_unit
+            subtotal += tot
+            rows.append([
+                Paragraph(str(item.get('numero','')), styles['cb']),
+                Paragraph(str(item.get('cantidad','')), styles['c']),
+                Paragraph(str(item.get('sku','')), styles['c']),
+                Paragraph(item.get('concepto',''), styles['co']),
+                Paragraph(fm(p_unit), styles['mr']),
+                Paragraph(fm(tot), styles['mbr']),
+            ])
+            sty += [('BACKGROUND',(0,ri),(-1,ri), GRIS if ri%2==0 else BLANCO)]
+            ri += 1
+
+    data_rows = ri  # rows so far (header + partidas)
+
+    # -- EXACT HEIGHT MEASUREMENT -----------------------------------------
+    EMPTY_ROW_H = 18.0
+
+    def _h(elem): _, hh = elem.wrap(TW, 9999); return hh
+
+    # Measure every fixed element with actual content
+    fixed_h = (_h(hdr) + _h(top) + _h(banner) + _h(cli))
+
+    # Measure the current partida rows table (header + partidas, no totals yet)
+    tmp_tbl = Table(rows, colWidths=CW)
+    tmp_tbl.setStyle(TableStyle(sty))
+    fixed_h += _h(tmp_tbl)
+
+    # Add totals, nota, firma heights (fixed)
+    # Totals: 3 rows  ~9.5pts each  55pts
+    # Nota: ~18pts, Firma: ~84pts
+    fixed_h += 55.0 + 18.0 + 84.0
+
+    # Safety buffer: subtract 2 empty rows to prevent overflow
+    remaining = usable_h - fixed_h - (2 * EMPTY_ROW_H)
+    empty_rows_needed = max(0, int(remaining / EMPTY_ROW_H))
+
+    for _ in range(empty_rows_needed):
+        rows.append(['','','','','',''])
+        sty += [('BACKGROUND',(0,ri),(-1,ri), GRIS if ri%2==0 else BLANCO)]
+        ri += 1
+
+    # -- TOTALES -------------------------------------------------------------
+    iva_pct = float(data.get('iva_porciento',16))/100
+    iva_val = subtotal * iva_pct
+    total   = subtotal + iva_val
+
+    for lbl, val, big in [
+        ('Subtotal M.N.', subtotal, False),
+        ('IVA',           iva_val,  False),
+        ('Total M.N.',    total,    True),
+    ]:
+        rows.append(['','','','',
+                     Paragraph(lbl,  styles['wbr']),
+                     Paragraph(fm(val), styles['drl'] if big else styles['dr'])])
+        sty += [
+            ('BACKGROUND',(0,ri),(3,ri),BLANCO),
+            ('BACKGROUND',(4,ri),(4,ri),AZUL),
+            ('BACKGROUND',(5,ri),(5,ri),AZUL),
+            ('ALIGN',(4,ri),(-1,ri),'RIGHT'),
+            ('RIGHTPADDING',(5,ri),(5,ri),5),
+            ('LEFTPADDING',(4,ri),(4,ri),3),
+            ('TOPPADDING',(4,ri),(5,ri),4 if big else 3),
+            ('BOTTOMPADDING',(4,ri),(5,ri),4 if big else 3),
+        ]
+        if big:
+            sty += [('LINEABOVE',(4,ri),(5,ri),1,DORADO)]
+        ri += 1
+
+    final_tbl = Table(rows, colWidths=CW, repeatRows=1)
+    final_tbl.setStyle(TableStyle(sty))
+
+    # -- NOTA ----------------------------------------------------------------
+    nota = data.get('nota','')
+    nota_tbl = Table(
+        [[Paragraph(f'<b>NOTA:</b> {nota}', styles['no'])]],
+        colWidths=[TW]
+    )
+    nota_tbl.setStyle(TableStyle([
+        ('BOX',(0,0),(-1,-1),0.5,NEGRO),
+        ('TOPPADDING',(0,0),(-1,-1),4),('BOTTOMPADDING',(0,0),(-1,-1),4),
+        ('LEFTPADDING',(0,0),(-1,-1),5),
+    ]))
+
+    # -- FIRMA ---------------------------------------------------------------
+    fn = data.get('firma_nombre','Ing. Alberto Lpez Malvez')
+    fc = data.get('firma_cargo','DIRECTOR GENERAL')
+    firma_tbl = Table([
+        [Paragraph('ATENTAMENTE', styles['fi'])],
+        [Paragraph(fn,            styles['fi'])],
+        [Paragraph(fc,            styles['fi'])],
+    ], colWidths=[TW])
+    firma_tbl.setStyle(TableStyle([
+        ('BOX',(0,0),(-1,-1),0.5,NEGRO),
+        ('BACKGROUND',(0,0),(-1,-1),GRIS),
+        ('TOPPADDING',(0,0),(-1,-1),8),('BOTTOMPADDING',(0,0),(-1,-1),8),
+    ]))
+
+    # -- ASSEMBLE STORY -------------------------------------------------------
+    story = [hdr, top, banner, cli, final_tbl, nota_tbl, firma_tbl]
+
+    # -- BORDER ON EVERY PAGE ------------------------------------------------
+    def on_page(canv, doc):
+        canv.saveState()
+        canv.setStrokeColor(NEGRO)
+        canv.setLineWidth(1)
+        canv.rect(LM-3, BM-3, W-LM-RM+6, H-TM-BM+6)
+        canv.restoreState()
+
+    doc = SimpleDocTemplate(
+        out_path, pagesize=letter,
+        leftMargin=LM, rightMargin=RM,
+        topMargin=TM, bottomMargin=BM
+    )
+    doc.build(story, onFirstPage=on_page, onLaterPages=on_page)
+    print(f'PDF generado: {out_path}')
