@@ -31,6 +31,7 @@ def init_db():
             folio TEXT UNIQUE NOT NULL,
             solicitante TEXT,
             asignado_id INTEGER,
+            asignado_nombre TEXT,
             area TEXT,
             fecha_hora TEXT,
             codigo_equipo TEXT,
@@ -186,10 +187,11 @@ def ot_create_orden():
     now   = datetime.now().strftime('%d/%m/%Y %H:%M')
     conn  = get_db()
     cur   = conn.execute('''INSERT INTO ot_ordenes
-        (folio,solicitante,asignado_id,area,fecha_hora,codigo_equipo,
+        (folio,solicitante,asignado_id,asignado_nombre,area,fecha_hora,codigo_equipo,
          descripcion_servicio,trabajos_efectuados,observaciones,estado)
-        VALUES (?,?,?,?,?,?,?,?,?,?)''',
-        (folio, data.get('solicitante',''), data.get('asignado_id') or None,
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)''',
+        (folio, data.get('solicitante',''), None,
+         data.get('asignado_nombre',''),
          data.get('area',''), data.get('fecha_hora', now),
          data.get('codigo_equipo',''), data.get('descripcion_servicio',''),
          data.get('trabajos_efectuados',''), data.get('observaciones',''),
@@ -208,10 +210,10 @@ def ot_update_orden(oid):
     data = request.get_json()
     now  = datetime.now().strftime('%d/%m/%Y %H:%M')
     conn = get_db()
-    conn.execute('''UPDATE ot_ordenes SET solicitante=?,asignado_id=?,area=?,
+    conn.execute('''UPDATE ot_ordenes SET solicitante=?,asignado_nombre=?,area=?,
         codigo_equipo=?,descripcion_servicio=?,trabajos_efectuados=?,
         observaciones=?,estado=?,updated_at=? WHERE id=?''',
-        (data.get('solicitante',''), data.get('asignado_id') or None,
+        (data.get('solicitante',''), data.get('asignado_nombre',''),
          data.get('area',''), data.get('codigo_equipo',''),
          data.get('descripcion_servicio',''), data.get('trabajos_efectuados',''),
          data.get('observaciones',''), data.get('estado','pendiente'), now, oid))
