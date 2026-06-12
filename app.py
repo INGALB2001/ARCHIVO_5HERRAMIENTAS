@@ -1,4 +1,4 @@
-import os, sys, io, tempfile, base64, sqlite3, json, html, re
+import os, sys, io, tempfile, base64, sqlite3, json, html
 from datetime import datetime
 from flask import Flask, send_from_directory, request, send_file, jsonify, session
 
@@ -15,7 +15,7 @@ DB = os.path.join(BASE, 'ordenes.db')
 
 
 # =========================
-# HELPERS PDF
+# HELPERS PDF COTIZACION
 # =========================
 
 def safe_text(value):
@@ -28,12 +28,14 @@ def safe_float(value, default=0):
     try:
         if value is None or value == "":
             return default
+
         value = str(value)
         value = value.replace("$", "")
         value = value.replace(",", "")
         value = value.replace("MXN", "")
         value = value.replace("mxn", "")
         value = value.strip()
+
         return float(value)
     except:
         return default
@@ -48,10 +50,13 @@ def limpiar_data_cotizacion(data):
         cliente = {}
 
     condiciones_pago = data.get("condiciones_pago", ["", "", ""])
+
     if isinstance(condiciones_pago, str):
         condiciones_pago = [condiciones_pago, "", ""]
+
     if not isinstance(condiciones_pago, list):
         condiciones_pago = ["", "", ""]
+
     while len(condiciones_pago) < 3:
         condiciones_pago.append("")
 
@@ -139,6 +144,7 @@ def get_db():
 
 def init_db():
     conn = get_db()
+
     conn.executescript('''
         CREATE TABLE IF NOT EXISTS ot_trabajadores (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -175,9 +181,13 @@ def init_db():
     ''')
 
     cur = conn.execute('SELECT COUNT(*) FROM ot_trabajadores')
+
     if cur.fetchone()[0] == 0:
         for w in ['Alberto Lopez', 'Trabajador 2', 'Trabajador 3', 'Trabajador 4', 'Trabajador 5']:
-            conn.execute('INSERT INTO ot_trabajadores (nombre) VALUES (?)', (w,))
+            conn.execute(
+                'INSERT INTO ot_trabajadores (nombre) VALUES (?)',
+                (w,)
+            )
 
     conn.commit()
     conn.close()
@@ -185,11 +195,15 @@ def init_db():
 
 def next_folio():
     conn = get_db()
+
     cur = conn.execute(
         "SELECT MAX(CAST(SUBSTR(folio,3) AS INTEGER)) FROM ot_ordenes WHERE folio LIKE 'OT%'"
     )
+
     n = (cur.fetchone()[0] or 0) + 1
+
     conn.close()
+
     return f'OT{n:04d}'
 
 
@@ -224,10 +238,10 @@ def remision_page():
 def ordenes_page():
     return send_from_directory(BASE, 'ordenes.html')
 
-@app.route('/ordenes')
-def ordenes_page():
-    return send_from_directory(BASE, 'ordenes.html')
 
+# =========================
+# PWA APP
+# =========================
 
 @app.route('/manifest.json')
 def manifest():
@@ -245,6 +259,7 @@ def service_worker():
         'service-worker.js',
         mimetype='application/javascript'
     )
+
 
 # =========================
 # PDF COTIZACION
@@ -307,12 +322,16 @@ def gen_pdf():
         generar(data, path)
 
         with open(path, 'rb') as f:
-            buf = io.BytesIO(f.read())
-
-        buf.seek(0)
+            contenido = f.read()
 
         if path and os.path.exists(path):
             os.unlink(path)
+
+        if not contenido.startswith(b'%PDF'):
+            raise Exception("El archivo generado no es un PDF válido")
+
+        buf = io.BytesIO(contenido)
+        buf.seek(0)
 
         return send_file(
             buf,
@@ -322,7 +341,7 @@ def gen_pdf():
         )
 
     except Exception as e:
-        print("ERROR GENERANDO PDF:", repr(e))
+        print("ERROR GENERANDO PDF COTIZACION:", repr(e))
 
         if path and os.path.exists(path):
             try:
@@ -344,22 +363,30 @@ def gen_pdf():
 @app.route('/generar_remision', methods=['POST'])
 def gen_remision():
     data = request.get_json(force=True)
+
     sello_path = None
     evidencia_path = None
     temps = []
 
     def save_b64(b64_str, mime):
         ext = '.jpg' if 'jpeg' in mime or 'jpg' in mime else '.png'
+
         with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as t:
             t.write(base64.b64decode(b64_str))
             return t.name
 
     if data.get('sello_b64'):
-        sello_path = save_b64(data['sello_b64'], data.get('sello_mime', 'image/jpeg'))
+        sello_path = save_b64(
+            data['sello_b64'],
+            data.get('sello_mime', 'image/jpeg')
+        )
         temps.append(sello_path)
 
     if data.get('evidencia_b64'):
-        evidencia_path = save_b64(data['evidencia_b64'], data.get('evidencia_mime', 'image/jpeg'))
+        evidencia_path = save_b64(
+            data['evidencia_b64'],
+            data.get('evidencia_mime', 'image/jpeg')
+        )
         temps.append(evidencia_path)
 
     with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
@@ -368,11 +395,20 @@ def gen_remision():
     temps.append(out_path)
 
     try:
-        generar_remision(data, out_path, sello_path=sello_path, evidencia_path=evidencia_path)
+        generar_remision(
+            data,
+            out_path,
+            sello_path=sello_path,
+            evidencia_path=evidencia_path
+        )
 
         with open(out_path, 'rb') as f:
-            buf = io.BytesIO(f.read())
+            contenido = f.read()
 
+        if not contenido.startswith(b'%PDF'):
+            raise Exception("La remisión generada no es un PDF válido")
+
+        buf = io.BytesIO(contenido)
         buf.seek(0)
 
         return send_file(
@@ -398,35 +434,45 @@ def gen_remision():
 @app.route('/api/ot/trabajadores', methods=['GET'])
 def ot_get_trabajadores():
     conn = get_db()
+
     rows = conn.execute(
         'SELECT * FROM ot_trabajadores WHERE activo=1 ORDER BY nombre'
     ).fetchall()
+
     conn.close()
+
     return jsonify([dict(r) for r in rows])
 
 
 @app.route('/api/ot/trabajadores', methods=['POST'])
 def ot_add_trabajador():
     data = request.get_json()
+
     conn = get_db()
+
     conn.execute(
         'INSERT INTO ot_trabajadores (nombre) VALUES (?)',
         (data['nombre'],)
     )
+
     conn.commit()
     conn.close()
+
     return jsonify({'ok': True})
 
 
 @app.route('/api/ot/trabajadores/<int:tid>', methods=['DELETE'])
 def ot_del_trabajador(tid):
     conn = get_db()
+
     conn.execute(
         'UPDATE ot_trabajadores SET activo=0 WHERE id=?',
         (tid,)
     )
+
     conn.commit()
     conn.close()
+
     return jsonify({'ok': True})
 
 
@@ -440,6 +486,7 @@ def ot_get_ordenes():
         LEFT JOIN ot_trabajadores t ON o.asignado_id = t.id
         WHERE 1=1
     '''
+
     params = []
 
     if request.args.get('asignado'):
@@ -453,18 +500,23 @@ def ot_get_ordenes():
     sql += ' ORDER BY o.id DESC'
 
     rows = conn.execute(sql, params).fetchall()
+
     result = []
 
     for r in rows:
         d = dict(r)
+
         refs = conn.execute(
             'SELECT * FROM ot_refacciones WHERE orden_id=?',
             (r['id'],)
         ).fetchall()
+
         d['refacciones'] = [dict(ref) for ref in refs]
+
         result.append(d)
 
     conn.close()
+
     return jsonify(result)
 
 
@@ -475,6 +527,7 @@ def ot_create_orden():
     now = datetime.now().strftime('%d/%m/%Y %H:%M')
 
     conn = get_db()
+
     cur = conn.execute('''
         INSERT INTO ot_ordenes
         (
@@ -532,7 +585,11 @@ def ot_create_orden():
     conn.commit()
     conn.close()
 
-    return jsonify({'ok': True, 'folio': folio, 'id': oid})
+    return jsonify({
+        'ok': True,
+        'folio': folio,
+        'id': oid
+    })
 
 
 @app.route('/api/ot/ordenes/<int:oid>', methods=['PUT'])
@@ -567,7 +624,10 @@ def ot_update_orden(oid):
         oid
     ))
 
-    conn.execute('DELETE FROM ot_refacciones WHERE orden_id=?', (oid,))
+    conn.execute(
+        'DELETE FROM ot_refacciones WHERE orden_id=?',
+        (oid,)
+    )
 
     for ref in data.get('refacciones', []):
         if ref.get('descripcion'):
@@ -603,10 +663,12 @@ def ot_update_estado(oid):
     now = datetime.now().strftime('%d/%m/%Y %H:%M')
 
     conn = get_db()
+
     conn.execute(
         'UPDATE ot_ordenes SET estado=?, updated_at=? WHERE id=?',
         (data['estado'], now, oid)
     )
+
     conn.commit()
     conn.close()
 
@@ -616,8 +678,17 @@ def ot_update_estado(oid):
 @app.route('/api/ot/ordenes/<int:oid>', methods=['DELETE'])
 def ot_delete_orden(oid):
     conn = get_db()
-    conn.execute('DELETE FROM ot_refacciones WHERE orden_id=?', (oid,))
-    conn.execute('DELETE FROM ot_ordenes WHERE id=?', (oid,))
+
+    conn.execute(
+        'DELETE FROM ot_refacciones WHERE orden_id=?',
+        (oid,)
+    )
+
+    conn.execute(
+        'DELETE FROM ot_ordenes WHERE id=?',
+        (oid,)
+    )
+
     conn.commit()
     conn.close()
 
@@ -626,52 +697,72 @@ def ot_delete_orden(oid):
 
 @app.route('/api/ot/ordenes/<int:oid>/pdf', methods=['GET'])
 def ot_pdf(oid):
-    import sys
-    sys.path.insert(0, BASE)
+    import traceback
 
-    from generar_ot import generar_ot_pdf
+    try:
+        from generar_ot import generar_ot_pdf
 
-    conn = get_db()
+        conn = get_db()
 
-    r = conn.execute('''
-        SELECT o.*, t.nombre as asignado_nombre
-        FROM ot_ordenes o
-        LEFT JOIN ot_trabajadores t ON o.asignado_id = t.id
-        WHERE o.id=?
-    ''', (oid,)).fetchone()
+        r = conn.execute('''
+            SELECT o.*, t.nombre as asignado_nombre
+            FROM ot_ordenes o
+            LEFT JOIN ot_trabajadores t ON o.asignado_id = t.id
+            WHERE o.id=?
+        ''', (oid,)).fetchone()
 
-    if not r:
+        if not r:
+            conn.close()
+            return jsonify({'error': 'Orden no encontrada'}), 404
+
+        d = dict(r)
+
+        refs = conn.execute(
+            'SELECT * FROM ot_refacciones WHERE orden_id=?',
+            (oid,)
+        ).fetchall()
+
+        d['refacciones'] = [dict(ref) for ref in refs]
+
         conn.close()
-        return jsonify({'error': 'not found'}), 404
 
-    d = dict(r)
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            out = tmp.name
 
-    refs = conn.execute(
-        'SELECT * FROM ot_refacciones WHERE orden_id=?',
-        (oid,)
-    ).fetchall()
+        generar_ot_pdf(d, out)
 
-    d['refacciones'] = [dict(ref) for ref in refs]
+        if not os.path.exists(out) or os.path.getsize(out) == 0:
+            raise Exception("El archivo PDF de OT se generó vacío")
 
-    conn.close()
+        with open(out, 'rb') as f:
+            contenido = f.read()
 
-    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
-        out = tmp.name
+        os.unlink(out)
 
-    generar_ot_pdf(d, out)
+        if not contenido.startswith(b'%PDF'):
+            raise Exception("El archivo generado no es un PDF válido")
 
-    with open(out, 'rb') as f:
-        buf = io.BytesIO(f.read())
+        buf = io.BytesIO(contenido)
+        buf.seek(0)
 
-    os.unlink(out)
-    buf.seek(0)
+        return send_file(
+            buf,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='OT_{}.pdf'.format(d.get('folio', oid))
+        )
 
-    return send_file(
-        buf,
-        mimetype='application/pdf',
-        as_attachment=True,
-        download_name='OT_{}.pdf'.format(d.get('folio', oid))
-    )
+    except Exception as e:
+        print("ERROR GENERANDO PDF OT:")
+        print(traceback.format_exc())
+
+        html_error = f"""
+        <h2>Error generando PDF de orden de trabajo</h2>
+        <p><b>Error:</b> {str(e)}</p>
+        <p>Revisa Railway Logs para ver el detalle completo.</p>
+        """
+
+        return html_error, 500
 
 
 @app.route('/api/ot/admin/login', methods=['POST'])
