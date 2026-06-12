@@ -1,0 +1,25 @@
+{
+  "name": "Panel de Herramientas Industrial",
+  "short_name": "Panel ESHEN",
+  "description": "Panel interno para cotizaciones, remisiones, órdenes de trabajo y herramientas industriales.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0d1b3e",
+  "icons": [
+    {
+      "src": "/static/logo_eshen.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/logo_eshen.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
