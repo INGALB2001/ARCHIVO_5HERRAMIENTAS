@@ -224,6 +224,27 @@ def remision_page():
 def ordenes_page():
     return send_from_directory(BASE, 'ordenes.html')
 
+@app.route('/ordenes')
+def ordenes_page():
+    return send_from_directory(BASE, 'ordenes.html')
+
+
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory(
+        BASE,
+        'manifest.json',
+        mimetype='application/manifest+json'
+    )
+
+
+@app.route('/service-worker.js')
+def service_worker():
+    return send_from_directory(
+        BASE,
+        'service-worker.js',
+        mimetype='application/javascript'
+    )
 
 # =========================
 # PDF COTIZACION
