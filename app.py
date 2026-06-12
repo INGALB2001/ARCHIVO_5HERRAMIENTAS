@@ -1,4 +1,4 @@
-import os, sys, io, tempfile, base64, sqlite3, json
+import os, sys, io, tempfile, base64, sqlite3, json, html, re
 from datetime import datetime
 from flask import Flask, send_from_directory, request, send_file, jsonify, session
 
@@ -12,6 +12,119 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = os.environ.get('SECRET_KEY', 'eshen_secret_2024')
 ADMIN_PASS = os.environ.get('ADMIN_PASS', '247096')
 DB = os.path.join(BASE, 'ordenes.db')
+
+
+# =========================
+# HELPERS PDF
+# =========================
+
+def safe_text(value):
+    if value is None:
+        return ""
+    return html.escape(str(value), quote=False)
+
+
+def safe_float(value, default=0):
+    try:
+        if value is None or value == "":
+            return default
+        value = str(value)
+        value = value.replace("$", "")
+        value = value.replace(",", "")
+        value = value.replace("MXN", "")
+        value = value.replace("mxn", "")
+        value = value.strip()
+        return float(value)
+    except:
+        return default
+
+
+def limpiar_data_cotizacion(data):
+    if not isinstance(data, dict):
+        data = {}
+
+    cliente = data.get("cliente", {})
+    if not isinstance(cliente, dict):
+        cliente = {}
+
+    condiciones_pago = data.get("condiciones_pago", ["", "", ""])
+    if isinstance(condiciones_pago, str):
+        condiciones_pago = [condiciones_pago, "", ""]
+    if not isinstance(condiciones_pago, list):
+        condiciones_pago = ["", "", ""]
+    while len(condiciones_pago) < 3:
+        condiciones_pago.append("")
+
+    partidas_limpias = []
+    partidas = data.get("partidas", [])
+
+    if not isinstance(partidas, list) or len(partidas) == 0:
+        partidas = [{
+            "numero": "1",
+            "cantidad": 1,
+            "sku": "",
+            "concepto": data.get("concepto", "Servicio industrial"),
+            "precio_unitario": data.get("precio_unitario", 0)
+        }]
+
+    contador = 1
+
+    for item in partidas:
+        if not isinstance(item, dict):
+            continue
+
+        if item.get("tipo") == "grupo":
+            partidas_limpias.append({
+                "tipo": "grupo",
+                "titulo": safe_text(item.get("titulo", ""))
+            })
+        else:
+            cantidad = safe_float(item.get("cantidad", 1), 1)
+            precio = safe_float(item.get("precio_unitario", 0), 0)
+
+            partidas_limpias.append({
+                "tipo": "partida",
+                "numero": safe_text(item.get("numero", contador)),
+                "cantidad": cantidad,
+                "sku": safe_text(item.get("sku", "")),
+                "concepto": safe_text(item.get("concepto", "")),
+                "precio_unitario": precio
+            })
+
+            contador += 1
+
+    data_limpia = {
+        "rfc_emisor": safe_text(data.get("rfc_emisor", "")),
+        "email_emisor": safe_text(data.get("email_emisor", "")),
+        "proveedor": safe_text(data.get("proveedor", "MAF Automation")),
+        "fecha": safe_text(data.get("fecha", datetime.now().strftime("%d/%m/%Y"))),
+        "numero_cotizacion": safe_text(data.get("numero_cotizacion", "001")),
+
+        "cliente": {
+            "razon_social": safe_text(cliente.get("razon_social", "")),
+            "rfc": safe_text(cliente.get("rfc", "")),
+            "direccion": safe_text(cliente.get("direccion", "")),
+            "correo": safe_text(cliente.get("correo", "")),
+            "atencion": safe_text(cliente.get("atencion", ""))
+        },
+
+        "vigencia": safe_text(data.get("vigencia", "30 días")),
+
+        "condiciones_pago": [
+            safe_text(condiciones_pago[0]),
+            safe_text(condiciones_pago[1]),
+            safe_text(condiciones_pago[2])
+        ],
+
+        "partidas": partidas_limpias,
+
+        "nota": safe_text(data.get("nota", "")),
+        "firma_nombre": safe_text(data.get("firma_nombre", "Ing. Alberto López Malváez")),
+        "firma_cargo": safe_text(data.get("firma_cargo", "DIRECTOR GENERAL")),
+        "iva_porciento": safe_float(data.get("iva_porciento", 16), 16)
+    }
+
+    return data_limpia
 
 
 # =========================
@@ -120,6 +233,8 @@ def ordenes_page():
 @app.route('/generar_pdf', methods=['POST'])
 @app.route('/generar-pdf', methods=['POST'])
 def gen_pdf():
+    path = None
+
     try:
         if request.is_json:
             data = request.get_json(force=True)
@@ -160,8 +275,10 @@ def gen_pdf():
                 "nota": request.form.get("nota", ""),
                 "firma_nombre": request.form.get("firma_nombre", "Ing. Alberto López Malváez"),
                 "firma_cargo": request.form.get("firma_cargo", "DIRECTOR GENERAL"),
-                "iva_porciento": float(request.form.get("iva_porciento", 16))
+                "iva_porciento": request.form.get("iva_porciento", 16)
             }
+
+        data = limpiar_data_cotizacion(data)
 
         with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
             path = tmp.name
@@ -171,8 +288,10 @@ def gen_pdf():
         with open(path, 'rb') as f:
             buf = io.BytesIO(f.read())
 
-        os.unlink(path)
         buf.seek(0)
+
+        if path and os.path.exists(path):
+            os.unlink(path)
 
         return send_file(
             buf,
@@ -182,7 +301,14 @@ def gen_pdf():
         )
 
     except Exception as e:
-        print("ERROR GENERANDO PDF:", e)
+        print("ERROR GENERANDO PDF:", repr(e))
+
+        if path and os.path.exists(path):
+            try:
+                os.unlink(path)
+            except:
+                pass
+
         return jsonify({
             "ok": False,
             "error": str(e)
